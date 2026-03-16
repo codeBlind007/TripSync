@@ -1,6 +1,12 @@
 import { Logo } from "@/components/logo";
 import Link from "next/link";
 
+type FooterVariant = "default" | "marketing";
+
+type FooterSectionProps = {
+  variant?: FooterVariant;
+};
+
 const links = [
   {
     title: "Features",
@@ -28,21 +34,42 @@ const links = [
   },
 ];
 
-export default function FooterSection() {
+export default function FooterSection({
+  variant = "default",
+}: FooterSectionProps) {
+  const isMarketing = variant === "marketing";
+
+  const footerClasses = isMarketing
+    ? "relative overflow-hidden bg-gradient-to-b from-cyan-700/85 via-sky-900 to-slate-950 py-16 text-slate-100 md:py-24"
+    : "relative overflow-hidden border-t border-border/60 bg-background py-16 text-foreground md:py-20";
+
+  const topFadeClasses = isMarketing
+    ? "pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-cyan-200/35 to-transparent"
+    : "pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-sky-100/40 to-transparent dark:from-slate-800/30";
+
+  const linkClasses = isMarketing
+    ? "text-slate-200/90 hover:text-cyan-200 block duration-150"
+    : "text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block duration-150";
+
+  const socialClasses = isMarketing
+    ? "text-slate-300/90 hover:text-cyan-200 block"
+    : "text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block";
+
+  const copyrightClasses = isMarketing
+    ? "block text-center text-sm text-slate-300/80"
+    : "block text-center text-sm text-muted-foreground";
+
   return (
-    <footer className="bg-gradient-to-b from-slate-950 to-slate-900 py-16 text-slate-100 md:py-24">
-      <div className="mx-auto max-w-5xl px-6">
+    <footer className={footerClasses}>
+      <div aria-hidden className={topFadeClasses} />
+      <div className="relative mx-auto max-w-5xl px-6">
         <Link href="/" aria-label="go home" className="mx-auto block size-fit">
           <Logo src="/logo.png" alt="TripSync" />
         </Link>
 
         <div className="my-8 flex flex-wrap justify-center gap-6 text-sm">
           {links.map((link, index) => (
-            <Link
-              key={index}
-              href={link.href}
-              className="text-slate-300 hover:text-cyan-300 block duration-150"
-            >
+            <Link key={index} href={link.href} className={linkClasses}>
               <span>{link.title}</span>
             </Link>
           ))}
@@ -53,7 +80,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="X/Twitter"
-            className="text-slate-400 hover:text-cyan-300 block"
+            className={socialClasses}
           >
             <svg
               className="size-6"
@@ -73,7 +100,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn"
-            className="text-slate-400 hover:text-cyan-300 block"
+            className={socialClasses}
           >
             <svg
               className="size-6"
@@ -93,7 +120,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
-            className="text-slate-400 hover:text-cyan-300 block"
+            className={socialClasses}
           >
             <svg
               className="size-6"
@@ -113,7 +140,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Threads"
-            className="text-slate-400 hover:text-cyan-300 block"
+            className={socialClasses}
           >
             <svg
               className="size-6"
@@ -138,7 +165,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram"
-            className="text-slate-400 hover:text-cyan-300 block"
+            className={socialClasses}
           >
             <svg
               className="size-6"
@@ -158,7 +185,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="TikTok"
-            className="text-slate-400 hover:text-cyan-300 block"
+            className={socialClasses}
           >
             <svg
               className="size-6"
@@ -174,7 +201,7 @@ export default function FooterSection() {
             </svg>
           </Link>
         </div>
-        <span className="block text-center text-sm text-slate-400">
+        <span className={copyrightClasses}>
           {" "}
           © {new Date().getFullYear()} TripSync, All rights reserved
         </span>
