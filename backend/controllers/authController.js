@@ -5,17 +5,35 @@ import dotenv from "dotenv";
 import userSchema from "../models/User.js";
 import tripController from "./tripController.js";
 
-const createAccount = async(req, res, next) => {
+dotenv.config();
+
+const getAuthCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: 72 * 60 * 60 * 1000,
+    path: "/",
+  };
+
+  if (process.env.COOKIE_DOMAIN) {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+  }
+
+  return cookieOptions;
+};
+
+const createAccount = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
-    const {invite: inviteToken} = req.query;
+    const { invite: inviteToken } = req.query;
     if (!name || !email || !password) {
       return res.status(400).json({
         error: true,
         message: "All fields required",
       });
     }
-    
 
     const isUser = await userSchema.findOne({ email });
     if (isUser) {
@@ -24,81 +42,76 @@ const createAccount = async(req, res, next) => {
         message: "User already exists",
       });
     }
-  
+
     const hashedPassword = await bcrypt.hash(password, 10);
-  
+
     const user = new userSchema({
       name,
       email,
       password: hashedPassword,
     });
-  
+
     await user.save();
-    
+
     const accessToken = jwt.sign(
       { userId: user._id },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "72h" }
+      { expiresIn: "72h" },
     );
-  
-    // ✅ Set JWT as an HTTP-only cookie
-    res.cookie("token", accessToken, {
-      httpOnly: true,
-      secure: false, // set to true in production (HTTPS)
-      sameSite: "Lax",
-      maxAge: 72 * 60 * 60 * 1000, // 72 hours
-    });
-    
-    if(inviteToken){
+
+    res.cookie("token", accessToken, getAuthCookieOptions());
+
+    if (inviteToken) {
       await tripController.acceptInvitation(inviteToken);
     }
-    
+
     return res.status(201).json({
       error: false,
       user: { fullName: user.fullName, email: user.email },
       message: "Registration Successful",
     });
-    
   } catch (error) {
     console.error("createAccount error:", error);
     return res.status(500).json({
-      message: "Failed to create account"
+      message: "Failed to create account",
     });
   }
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  const {invite: inviteToken} = req.query;
+  const { invite: inviteToken } = req.query;
   const user = await userSchema.findOne({ email });
   if (!user) return res.status(400).json({ message: "User not found" });
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) return res.status(400).json({ message: "Invalid credentials" });
+  if (!isPasswordValid)
+    return res.status(400).json({ message: "Invalid credentials" });
 
   const accessToken = jwt.sign(
     { userId: user._id },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "72h" }
+    { expiresIn: "72h" },
   );
 
-  res.cookie("token", accessToken, {
-    httpOnly: true,
-    secure: true, // true in production
-    sameSite: "lax",
-    domain: process.env.COOKIE_DOMAIN, 
-    maxAge: 72 * 60 * 60 * 1000,
-  });
+  res.cookie("token", accessToken, getAuthCookieOptions());
 
-  if(inviteToken){
+  if (inviteToken) {
     await tripController.acceptInvitation(inviteToken);
   }
-  
+
   return res.json({ message: "Login successful" });
 };
 
 const logout = (req, res) => {
-  res.clearCookie("token");
+  const cookieOptions = getAuthCookieOptions();
+  res.clearCookie("token", {
+    httpOnly: cookieOptions.httpOnly,
+    secure: cookieOptions.secure,
+    sameSite: cookieOptions.sameSite,
+    path: cookieOptions.path,
+    ...(cookieOptions.domain ? { domain: cookieOptions.domain } : {}),
+  });
   res.json({ message: "Logged out successfully" });
 };
 
@@ -127,7 +140,6 @@ const authController = {
   createAccount,
   login,
   logout,
-  protect
+  protect,
 };
 export default authController;
-

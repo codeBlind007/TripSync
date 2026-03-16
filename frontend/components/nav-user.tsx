@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   BadgeCheck,
@@ -7,13 +7,9 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
-} from "lucide-react"
+} from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,38 +18,43 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 import { useRouter } from "next/navigation";
 
-interface User{
-  name: string, 
-  email: string, 
-  avatar?: string,
+interface User {
+  name: string;
+  email: string;
+  avatar?: string;
 }
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export function NavUser(user: User) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
   const router = useRouter();
   const handleLogout = async () => {
-    const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: "POST",
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-    })
-    if(!res.ok){
-      return;
+      });
+      if (!res.ok) {
+        return;
+      }
+      router.replace("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
-    router.push('/');
-  }
+  };
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -115,13 +116,13 @@ export function NavUser(user: User) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleLogout}>
               <LogOut />
-              <button onClick={handleLogout}>Logout</button>
+              Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }
