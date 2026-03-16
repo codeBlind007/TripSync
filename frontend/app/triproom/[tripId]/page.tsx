@@ -2,6 +2,11 @@
 import TripRoom from "@/components/tripRoom/trip-room";
 import { getUserInfo } from "@/lib/api";
 import { getRoomCollab, getMessHistory } from "@/lib/api";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Trip Room",
+};
 
 interface TripRoomPageProps {
   params: Promise<{

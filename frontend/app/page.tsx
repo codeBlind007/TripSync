@@ -3,6 +3,11 @@ import ContentSection from "@/components/content-1";
 import Features from "@/components/features-1";
 import FooterSection from "@/components/footer";
 import HeroSection from "@/components/hero-section";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Plan Group Trips",
+};
 
 export default function Home() {
   return (
