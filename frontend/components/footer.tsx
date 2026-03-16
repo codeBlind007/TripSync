@@ -30,7 +30,7 @@ const links = [
 
 export default function FooterSection() {
   return (
-    <footer className="py-16 md:py-32">
+    <footer className="bg-gradient-to-b from-slate-950 to-slate-900 py-16 text-slate-100 md:py-24">
       <div className="mx-auto max-w-5xl px-6">
         <Link href="/" aria-label="go home" className="mx-auto block size-fit">
           <Logo src="/logo.png" alt="TripSync" />
@@ -41,7 +41,7 @@ export default function FooterSection() {
             <Link
               key={index}
               href={link.href}
-              className="text-muted-foreground hover:text-primary block duration-150"
+              className="text-slate-300 hover:text-cyan-300 block duration-150"
             >
               <span>{link.title}</span>
             </Link>
@@ -53,7 +53,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="X/Twitter"
-            className="text-muted-foreground hover:text-primary block"
+            className="text-slate-400 hover:text-cyan-300 block"
           >
             <svg
               className="size-6"
@@ -73,7 +73,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn"
-            className="text-muted-foreground hover:text-primary block"
+            className="text-slate-400 hover:text-cyan-300 block"
           >
             <svg
               className="size-6"
@@ -93,7 +93,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
-            className="text-muted-foreground hover:text-primary block"
+            className="text-slate-400 hover:text-cyan-300 block"
           >
             <svg
               className="size-6"
@@ -113,7 +113,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Threads"
-            className="text-muted-foreground hover:text-primary block"
+            className="text-slate-400 hover:text-cyan-300 block"
           >
             <svg
               className="size-6"
@@ -138,7 +138,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram"
-            className="text-muted-foreground hover:text-primary block"
+            className="text-slate-400 hover:text-cyan-300 block"
           >
             <svg
               className="size-6"
@@ -158,7 +158,7 @@ export default function FooterSection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="TikTok"
-            className="text-muted-foreground hover:text-primary block"
+            className="text-slate-400 hover:text-cyan-300 block"
           >
             <svg
               className="size-6"
@@ -174,7 +174,7 @@ export default function FooterSection() {
             </svg>
           </Link>
         </div>
-        <span className="text-muted-foreground block text-center text-sm">
+        <span className="block text-center text-sm text-slate-400">
           {" "}
           © {new Date().getFullYear()} TripSync, All rights reserved
         </span>

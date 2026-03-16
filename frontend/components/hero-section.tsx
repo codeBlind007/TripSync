@@ -10,14 +10,15 @@ export default function HeroSection() {
     <>
       <HeroHeader />
       <main className="overflow-x-hidden">
-        <section>
-          <div className="pb-24 pt-12 md:pb-32 lg:pb-56 lg:pt-44">
-            <div className="relative mx-auto flex max-w-6xl flex-col px-6 lg:block">
+        <section className="relative isolate">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_45%),radial-gradient(circle_at_80%_20%,#ccfbf1_0%,transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,#0f172a_0%,transparent_45%),radial-gradient(circle_at_80%_20%,#0f3a44_0%,transparent_40%)]" />
+          <div className="pb-24 pt-12 md:pb-32 lg:pb-40 lg:pt-44">
+            <div className="relative mx-auto flex max-w-6xl flex-col px-6 lg:min-h-[34rem] lg:block">
               <div className="mx-auto max-w-lg text-center lg:ml-0 lg:w-1/2 lg:text-left">
                 <h1 className="mt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:mt-16 xl:text-7xl">
                   One workspace for every group trip.
                 </h1>
-                <p className="mt-8 max-w-2xl text-pretty text-lg">
+                <p className="text-muted-foreground mt-8 max-w-2xl text-pretty text-lg">
                   TripSync keeps your itinerary, tasks, expenses, and trip room
                   chat in sync so your crew spends less time coordinating and
                   more time traveling.
@@ -43,13 +44,13 @@ export default function HeroSection() {
                 </div>
 
                 <div className="mt-8 grid grid-cols-2 gap-4 text-sm sm:max-w-md">
-                  <div className="rounded-lg border p-3">
+                  <div className="rounded-lg border border-sky-200/70 bg-white/80 p-3 backdrop-blur-sm dark:border-sky-800/50 dark:bg-white/5">
                     <p className="font-medium">Live Trip Rooms</p>
                     <p className="text-muted-foreground mt-1">
                       Real-time group chat per trip.
                     </p>
                   </div>
-                  <div className="rounded-lg border p-3">
+                  <div className="rounded-lg border border-teal-200/70 bg-white/80 p-3 backdrop-blur-sm dark:border-teal-800/50 dark:bg-white/5">
                     <p className="font-medium">Shared Itinerary</p>
                     <p className="text-muted-foreground mt-1">
                       Edit plans together instantly.
@@ -57,13 +58,21 @@ export default function HeroSection() {
                   </div>
                 </div>
               </div>
-              <Image
-                className="-z-10 order-first ml-auto h-56 w-full object-cover invert sm:h-96 lg:absolute lg:inset-0 lg:-right-20 lg:-top-96 lg:order-last lg:h-max lg:w-2/3 lg:object-contain dark:mix-blend-lighten dark:invert-0"
-                src="https://ik.imagekit.io/lrigu76hy/tailark/abstract-bg.jpg?updatedAt=1745733473768"
-                alt="Abstract Object"
-                height="4000"
-                width="3000"
-              />
+
+              <div className="relative mx-auto mt-12 w-full max-w-2xl lg:absolute lg:-right-4 lg:top-10 lg:mt-0 lg:w-[52%]">
+                <div className="absolute -inset-3 -z-10 rounded-[2rem] bg-gradient-to-br from-sky-300/35 via-cyan-300/25 to-teal-300/35 blur-2xl dark:from-sky-700/35 dark:via-cyan-700/20 dark:to-teal-700/35" />
+                <div className="relative overflow-hidden rounded-3xl border border-sky-200/70 bg-white/85 shadow-[0_25px_90px_-35px_rgba(2,132,199,0.55)] dark:border-sky-800/60 dark:bg-slate-900/70">
+                  <Image
+                    src="https://images.unsplash.com/photo-1501785888041-af3ef285b470"
+                    alt="Mountain landscape"
+                    width={3000}
+                    height={2000}
+                    priority
+                    className="h-[19rem] w-full object-cover object-center sm:h-[24rem] lg:h-[29rem]"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-sky-950/20 via-transparent to-cyan-400/20" />
+                </div>
+              </div>
             </div>
           </div>
         </section>

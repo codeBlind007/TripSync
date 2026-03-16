@@ -1,6 +1,9 @@
 export default function ContentSection() {
   return (
-    <section id="how-it-works" className="py-16 md:py-32">
+    <section
+      id="how-it-works"
+      className="bg-gradient-to-b from-background to-cyan-100/60 py-16 md:pt-24 md:pb-20 dark:to-slate-900/80"
+    >
       <div className="mx-auto max-w-5xl space-y-8 px-6 md:space-y-16">
         <h2 className="relative z-10 max-w-xl text-4xl font-medium lg:text-5xl">
           From invite to check-in, everyone stays on the same page.
@@ -8,26 +11,26 @@ export default function ContentSection() {
 
         <div className="grid gap-6 sm:grid-cols-2 md:gap-12 lg:gap-24">
           <div className="relative mb-6 sm:mb-0">
-            <div className="bg-muted/40 rounded-2xl border p-6">
+            <div className="bg-muted/40 rounded-2xl border border-sky-200/70 p-6 dark:border-sky-900/60">
               <p className="text-sm font-medium">
                 How a trip comes together in TripSync
               </p>
               <div className="mt-5 space-y-4">
-                <div className="rounded-lg border bg-background p-4">
+                <div className="rounded-lg border border-sky-200/70 bg-background p-4 dark:border-sky-900/60">
                   <p className="text-sm font-medium">1. Create Trip Room</p>
                   <p className="text-muted-foreground mt-1 text-sm">
                     Start a trip workspace with destination, dates, and core
                     details.
                   </p>
                 </div>
-                <div className="rounded-lg border bg-background p-4">
+                <div className="rounded-lg border border-cyan-200/70 bg-background p-4 dark:border-cyan-900/60">
                   <p className="text-sm font-medium">2. Invite Your Group</p>
                   <p className="text-muted-foreground mt-1 text-sm">
                     Add collaborators, manage pending invites, and bring
                     everyone in.
                   </p>
                 </div>
-                <div className="rounded-lg border bg-background p-4">
+                <div className="rounded-lg border border-teal-200/70 bg-background p-4 dark:border-teal-900/60">
                   <p className="text-sm font-medium">3. Plan, Assign, Track</p>
                   <p className="text-muted-foreground mt-1 text-sm">
                     Build itinerary, assign tasks, and monitor shared trip
@@ -54,13 +57,13 @@ export default function ContentSection() {
             </p>
 
             <div className="grid grid-cols-1 gap-3 pt-2 text-sm sm:grid-cols-2">
-              <div className="rounded-lg border p-3">
+              <div className="rounded-lg border border-sky-200/70 bg-white/70 p-3 dark:border-sky-900/60 dark:bg-white/5">
                 <p className="font-medium">Invite collaborators</p>
                 <p className="text-muted-foreground mt-1">
                   Send and manage trip invites in-app.
                 </p>
               </div>
-              <div className="rounded-lg border p-3">
+              <div className="rounded-lg border border-cyan-200/70 bg-white/70 p-3 dark:border-cyan-900/60 dark:bg-white/5">
                 <p className="font-medium">Coordinate in trip rooms</p>
                 <p className="text-muted-foreground mt-1">
                   Discuss plans without losing context.
@@ -69,7 +72,7 @@ export default function ContentSection() {
             </div>
 
             <div className="pt-6">
-              <blockquote className="border-l-4 pl-4">
+              <blockquote className="border-l-4 border-cyan-500/60 pl-4">
                 <p>
                   We replaced five different apps with TripSync. Tasks,
                   itinerary updates, and spending details are finally in one
