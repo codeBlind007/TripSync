@@ -1,15 +1,99 @@
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-const ChatHeader = ({ memberCount = 0 }: { memberCount?: number }) => {
+interface Collaborator {
+  collabId: string;
+  name: string;
+  email: string;
+}
+
+interface ChatHeaderProps {
+  memberCount?: number;
+  collaborators: Collaborator[];
+}
+
+const avatarColors = [
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-purple-500",
+  "bg-pink-500",
+  "bg-yellow-500",
+];
+
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+const ChatHeader = ({ memberCount = 0, collaborators }: ChatHeaderProps) => {
   return (
-    <div className="h-16 px-6 flex items-center justify-between bg-white border-b border-gray-200 shadow-sm">
+    <div className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm sm:px-6">
       <div>
-        <h2 className="font-semibold text-lg text-gray-800">Trip Room Chat</h2>
+        <h2 className="text-lg font-semibold text-gray-800">Trip Room Chat</h2>
         <p className="text-xs text-gray-500">{memberCount} members</p>
       </div>
-      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-        <MoreVertical size={20} className="text-gray-600" />
-      </button>
+
+      <div className="flex items-center gap-2">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="md:hidden">
+              <Users className="mr-2 h-4 w-4" />
+              Members
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[86%] p-0 sm:max-w-sm">
+            <SheetHeader className="border-b border-gray-200">
+              <SheetTitle className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-gray-700" />
+                Members
+              </SheetTitle>
+              <SheetDescription>
+                {memberCount} people in this trip
+              </SheetDescription>
+            </SheetHeader>
+
+            <div className="max-h-[calc(100dvh-6rem)] overflow-y-auto p-4">
+              <ul className="space-y-2">
+                {collaborators.map((c, idx) => (
+                  <li
+                    key={c.collabId}
+                    className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3"
+                  >
+                    <div
+                      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium text-white ${avatarColors[idx % avatarColors.length]}`}
+                    >
+                      {getInitials(c.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-800">
+                        {c.name}
+                      </p>
+                      <p className="truncate text-xs text-gray-500">
+                        {c.email}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <button className="hidden rounded-lg p-2 transition-colors hover:bg-gray-100 md:block">
+          <MoreVertical size={20} className="text-gray-600" />
+        </button>
+      </div>
     </div>
   );
 };

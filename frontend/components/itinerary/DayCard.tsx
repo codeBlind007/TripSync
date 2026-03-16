@@ -19,7 +19,13 @@ interface DayCardProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export function DayCard({ day, startDate, tripId, itineraryId, isCompleted }: DayCardProps) {
+export function DayCard({
+  day,
+  startDate,
+  tripId,
+  itineraryId,
+  isCompleted,
+}: DayCardProps) {
   const router = useRouter();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -54,7 +60,7 @@ export function DayCard({ day, startDate, tripId, itineraryId, isCompleted }: Da
 
     if (res.ok) {
       router.refresh();
-    }else{
+    } else {
       const data = await res.json();
       console.error(data.message);
     }
@@ -65,53 +71,57 @@ export function DayCard({ day, startDate, tripId, itineraryId, isCompleted }: Da
   return (
     <div className="relative z-10">
       {/* Day Header */}
-      <div className="flex items-center gap-6 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+      <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:gap-6">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-base font-bold text-white shadow-lg sm:h-16 sm:w-16 sm:text-lg">
             {dayNumber}
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-gray-900 sm:text-2xl">
               {formatDate(day.date)}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-sm text-gray-600 sm:text-base">
               {day.activities.length}{" "}
               {day.activities.length === 1 ? "activity" : "activities"} planned
             </p>
           </div>
         </div>
 
-        <Badge
-          variant="secondary"
-          className="bg-blue-100 text-blue-800 border-blue-200"
-        >
-          Day {dayNumber}
-        </Badge>
-        {!isCompleted && (
-          <>
-            <Button
-              asChild
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              <Link href={`/itinerary/${tripId}/edit/${day._id}`}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Activity
-              </Link>
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
-              onClick={handleDeleteItinerary}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Day
-            </Button>
-          </>
-        )}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Badge
+            variant="secondary"
+            className="border-blue-200 bg-blue-100 text-blue-800"
+          >
+            Day {dayNumber}
+          </Badge>
+          {!isCompleted && (
+            <>
+              <Button
+                asChild
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Link href={`/itinerary/${tripId}/edit/${day._id}`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Activity
+                </Link>
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleDeleteItinerary}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Day
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Activities */}
-      <div className="ml-20 space-y-4">
+      <div className="space-y-3 sm:ml-20 sm:space-y-4">
         {day.activities.map((activity, activityIndex) => (
           <ActivityCard
             key={activity.activityId}

@@ -43,7 +43,7 @@ export function ItineraryClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-8">
         <ItineraryHeader
           tripId={tripId}
           totalDays={totalDays}
@@ -56,7 +56,11 @@ export function ItineraryClient({
           totalActivities={totalActivities}
         />
 
-        <ItineraryTimeline itinerary={itinerary} tripId={tripId} isCompleted={isCompleted} />
+        <ItineraryTimeline
+          itinerary={itinerary}
+          tripId={tripId}
+          isCompleted={isCompleted}
+        />
 
         {!isCompleted && <AddMoreCTA tripId={tripId} />}
       </div>

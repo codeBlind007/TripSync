@@ -21,10 +21,11 @@ export function AddMoreCTA({ tripId }: AddMoreCTAProps) {
               Add more to your itinerary
             </h3>
             <p className="text-gray-600 mb-4">
-              Keep building your perfect trip with more activities and experiences
+              Keep building your perfect trip with more activities and
+              experiences
             </p>
           </div>
-          <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+          <Button asChild className="bg-blue-600 hover:bg-blue-700">
             <Link href={`/itinerary/${tripId}/add`}>
               <Plus className="h-4 w-4 mr-2" />
               Add New Itinerary Day

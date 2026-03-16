@@ -17,7 +17,7 @@ const getAuthCookieOptions = () => {
     path: "/",
   };
 
-  if (process.env.COOKIE_DOMAIN) {
+  if (process.env.COOKIE_DOMAIN && isProduction) {
     cookieOptions.domain = process.env.COOKIE_DOMAIN;
   }
 
