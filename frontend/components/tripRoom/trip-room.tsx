@@ -82,10 +82,10 @@ const TripRoom = ({
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-[calc(100dvh-6rem)] min-h-[28rem] overflow-hidden rounded-xl border border-gray-200 bg-gray-100 md:h-[calc(100dvh-3rem)]">
       <CollaboratorsSidebar collaborators={roomCollab} />
 
-      <div className="flex flex-col flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
         <ChatHeader memberCount={roomCollab.length} />
         <ChatBody messages={messages} userId={userDetails._id} />
         {!isCompleted && <ChatInput onSend={sendMessage} />}

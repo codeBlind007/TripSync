@@ -26,13 +26,13 @@ export default function DashboardLayout({
 
       <SidebarInset className="flex flex-col min-h-screen">
         {/* Header */}
-        <header className="h-14 flex items-center gap-3 border-b px-4">
+        <header className="h-14 flex items-center gap-3 border-b px-3 sm:px-4">
           <SidebarTrigger />
           <h1 className="font-semibold">Dashboard</h1>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-3 sm:p-4 md:p-6">{children}</main>
 
         <Footer variant="default" />
       </SidebarInset>

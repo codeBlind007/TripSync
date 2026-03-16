@@ -49,7 +49,7 @@ export function LoginForm({
         router.push(`/collaborators/${invitedTripId}`);
       }
       else if (res.ok) {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       } else {
         const errorData = await res.json();
         setError(errorData.message || "Login failed. Please try again.");

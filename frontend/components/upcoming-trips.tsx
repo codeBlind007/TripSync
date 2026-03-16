@@ -16,7 +16,7 @@ import {
   CalendarDays,
   MoreHorizontal,
   Share2,
-  ChevronLeft
+  ChevronLeft,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-
 
 export type Activity = {
   activityId: string;
@@ -101,11 +100,11 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const endDate = new Date(trip.endDate);
 
   const durationInDays = Math.ceil(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   const daysUntilTrip = Math.ceil(
-    (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   const isStartingSoon = daysUntilTrip <= 7 && daysUntilTrip > 0;
@@ -139,8 +138,8 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const completionPercentage = Math.round(
     completionItems.reduce(
       (acc, item) => acc + (item.completed ? item.weight : 0),
-      0
-    )
+      0,
+    ),
   );
 
   const getStatusColor = () => {
@@ -428,16 +427,13 @@ const UpcomingTrips: React.FC = () => {
   useEffect(() => {
     const getUpcomingTrips = async () => {
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/api/user/upcoming-trips`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          }
-        );
+        const res = await fetch(`${API_BASE_URL}/api/user/upcoming-trips`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
 
         if (!res.ok) throw new Error("Failed to fetch upcoming trips");
 
@@ -503,30 +499,30 @@ const UpcomingTrips: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 mt-8 px-6 py-2 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="mx-auto mt-4 max-w-7xl space-y-6 px-3 py-2 sm:mt-6 sm:space-y-8 sm:px-4 md:mt-8 md:px-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push("/dashboard")}
             className="rounded-full hover:bg-white hover:shadow-sm"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
             Upcoming Adventures
           </h1>
         </div>
         <Button
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           onClick={() => router.push("/dashboard/create-trip")}
         >
           <Plus className="h-4 w-4" />
           New Trip
         </Button>
       </div>
-      <p className="text-gray-600 -mt-4">
+      <p className="text-gray-600 sm:-mt-3">
         {trips.length > 0
           ? `You have ${trips.length} upcoming ${
               trips.length === 1 ? "trip" : "trips"
@@ -550,8 +546,8 @@ const UpcomingTrips: React.FC = () => {
             <Button
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              onClick={() => router.replace('/dashboard/create-trip')}
-            >     
+              onClick={() => router.replace("/dashboard/create-trip")}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Trip
             </Button>

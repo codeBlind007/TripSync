@@ -165,7 +165,9 @@ const CompletedTripCard = ({ trip }: { trip: Trip }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/itinerary/${trip._id}?isCompleted=${true}`)}
+            onClick={() =>
+              router.push(`/itinerary/${trip._id}?isCompleted=${true}`)
+            }
             className="flex items-center gap-1.5 hover:bg-blue-50 hover:text-blue-700 transition-colors rounded-lg px-3"
           >
             <List className="h-4 w-4" />
@@ -177,7 +179,9 @@ const CompletedTripCard = ({ trip }: { trip: Trip }) => {
             variant="ghost"
             size="sm"
             className="flex items-center gap-1.5 hover:bg-orange-50 hover:text-orange-700 transition-colors rounded-lg px-3"
-            onClick={() => router.push(`/triproom/${trip._id}?isCompleted=${true}`)}
+            onClick={() =>
+              router.push(`/triproom/${trip._id}?isCompleted=${true}`)
+            }
           >
             <MessageCircle className="h-4 w-4" />
             <span className="font-medium">Chat</span>
@@ -187,7 +191,9 @@ const CompletedTripCard = ({ trip }: { trip: Trip }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/tasks/${trip._id}?isCompleted=${true}`)}
+            onClick={() =>
+              router.push(`/tasks/${trip._id}?isCompleted=${true}`)
+            }
             className="flex items-center gap-1.5 hover:bg-green-50 hover:text-green-700 transition-colors rounded-lg px-3"
           >
             <CheckCircle className="h-4 w-4" />
@@ -198,7 +204,9 @@ const CompletedTripCard = ({ trip }: { trip: Trip }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/expenses/${trip._id}?isCompleted=${true}`)}
+            onClick={() =>
+              router.push(`/expenses/${trip._id}?isCompleted=${true}`)
+            }
             className="flex items-center gap-1.5 hover:bg-purple-50 hover:text-purple-700 transition-colors rounded-lg px-3"
           >
             <DollarSign className="h-4 w-4" />
@@ -209,7 +217,9 @@ const CompletedTripCard = ({ trip }: { trip: Trip }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/collaborators/${trip._id}?isCompleted=${true}`)}
+            onClick={() =>
+              router.push(`/collaborators/${trip._id}?isCompleted=${true}`)
+            }
             className="flex items-center gap-1.5 hover:bg-orange-50 hover:text-orange-700 transition-colors rounded-lg px-3"
           >
             <Users className="h-4 w-4" />
@@ -237,7 +247,7 @@ export default function CompletedTripsList({ trips }: { trips: Trip[] }) {
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
               Your Travel Memories
             </h1>
           </div>
@@ -263,7 +273,7 @@ export default function CompletedTripsList({ trips }: { trips: Trip[] }) {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="mb-8 flex items-start gap-3 sm:items-center sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -272,8 +282,8 @@ export default function CompletedTripsList({ trips }: { trips: Trip[] }) {
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
               Your Travel Memories
             </h1>
             <p className="text-gray-600 mt-1">
@@ -292,7 +302,7 @@ export default function CompletedTripsList({ trips }: { trips: Trip[] }) {
 
         {/* Summary Stats */}
         {trips.length > 0 && (
-          <div className="mt-12 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-8 border border-gray-200">
+          <div className="mt-12 rounded-2xl border border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50 p-5 sm:p-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div>
                 <div className="text-3xl font-bold text-gray-900 mb-1">
