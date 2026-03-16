@@ -8,7 +8,6 @@ Plan your itinerary, chat together, and document your journey — all in one pla
 ## ✨ Features
 
 - 📝 **Trip Planning** – Create and manage detailed itineraries.    
-- 📖 **Travel Stories** – Write and share stories about your trips.  
 - 💰 **Expense Tracking** – Split and manage expenses across the group.
 - 👥 **Collaborator Management** – Invite collaborators to your trip and allocate roles.
 - ✅ **Task Management** – Create tasks, set priorities, and assign them to collaborators.
@@ -98,17 +97,6 @@ npm run dev
 
 ---
 
-## 📸 Screenshots
-
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-6.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
-![alt text](image-4.png)
-![alt text](image-5.png)
-
----
 
 ## 🤝 Contributing
 
