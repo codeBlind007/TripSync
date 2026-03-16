@@ -86,6 +86,7 @@ const login = async (req, res) => {
     httpOnly: true,
     secure: true, // true in production
     sameSite: "None",
+    domain: process.env.COOKIE_DOMAIN, 
     maxAge: 72 * 60 * 60 * 1000,
   });
 
