@@ -14,16 +14,26 @@ interface Sender {
   email: string;
 }
 
+interface Collaborator {
+  collabId: string;
+  name: string;
+  email: string;
+}
+
 interface Props {
   messages: Message[];
   userId: string;
   onSend: (text: string) => void;
+  collaborators: Collaborator[];
 }
 
-const ChatLayout = ({ messages, userId, onSend }: Props) => {
+const ChatLayout = ({ messages, userId, onSend, collaborators }: Props) => {
   return (
     <div className="flex flex-col flex-1">
-      <ChatHeader />
+      <ChatHeader
+        collaborators={collaborators}
+        memberCount={collaborators.length}
+      />
 
       <ChatBody messages={messages} userId={userId} />
 
