@@ -32,11 +32,14 @@ await connectDB();
 
 const app = express();
 const server = createServer(app);
+const isProduction = process.env.NODE_ENV === "production";
+const appUrl = isProduction ? process.env.DEPLOYED_FRONTEND_URL : process.env.FRONTEND_URL;
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // Your frontend URL
+    origin: appUrl, // Your frontend URL
     credentials: true, // Allow cookies
   })
 );
