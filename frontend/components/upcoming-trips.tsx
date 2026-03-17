@@ -14,8 +14,6 @@ import {
   ChevronRight,
   AlertCircle,
   CalendarDays,
-  MoreHorizontal,
-  Share2,
   ChevronLeft,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -345,7 +343,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/itinerary/${trip._id}`)}
-            className="flex items-center gap-1.5 hover:bg-blue-50 hover:text-blue-700 transition-colors rounded-lg px-3"
+            className="flex items-center gap-1.5 hover:bg-blue-50 hover:text-blue-700 transition-colors rounded-lg px-3 cursor-pointer"
           >
             <List className="h-4 w-4" />
             <span className="font-medium">Itinerary</span>
@@ -356,7 +354,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/expenses/${trip._id}`)}
-            className="flex items-center gap-1.5 hover:bg-purple-50 hover:text-purple-700 transition-colors rounded-lg px-3"
+            className="flex items-center gap-1.5 hover:bg-purple-50 hover:text-purple-700 transition-colors rounded-lg px-3 cursor-pointer"
           >
             <DollarSign className="h-4 w-4" />
             <span className="font-medium">Expenses</span>
@@ -367,7 +365,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/tasks/${trip._id}`)}
-            className="flex items-center gap-1.5 hover:bg-green-50 hover:text-green-700 transition-colors rounded-lg px-3"
+            className="flex items-center gap-1.5 hover:bg-green-50 hover:text-green-700 transition-colors rounded-lg px-3 cursor-pointer"
           >
             <CheckCircle className="h-4 w-4" />
             <span className="font-medium">Tasks</span>
@@ -377,7 +375,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center gap-1.5 hover:bg-orange-50 hover:text-orange-700 transition-colors rounded-lg px-3"
+            className="flex items-center gap-1.5 hover:bg-orange-50 hover:text-orange-700 transition-colors rounded-lg px-3 cursor-pointer"
             onClick={() => router.push(`/triproom/${trip._id}`)}
           >
             <MessageCircle className="h-4 w-4" />
@@ -388,7 +386,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center gap-1.5 hover:bg-orange-50 hover:text-orange-700 transition-colors rounded-lg px-3"
+            className="flex items-center gap-1.5 hover:bg-orange-50 hover:text-orange-700 transition-colors rounded-lg px-3 cursor-pointer"
             onClick={() => router.push(`/collaborators/${trip._id}`)}
           >
             <Users className="h-4 w-4" />
@@ -397,24 +395,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
           </Button>
         </div>
       </CardContent>
-
-      {/* Hover Actions */}
-      <div className="absolute top-6 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 bg-white shadow-md hover:shadow-lg rounded-lg border border-gray-200"
-        >
-          <Share2 className="h-4 w-4 text-gray-600" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 bg-white shadow-md hover:shadow-lg rounded-lg border border-gray-200"
-        >
-          <MoreHorizontal className="h-4 w-4 text-gray-600" />
-        </Button>
-      </div>
     </Card>
   );
 };
@@ -506,7 +486,7 @@ const UpcomingTrips: React.FC = () => {
             variant="ghost"
             size="icon"
             onClick={() => router.push("/dashboard")}
-            className="rounded-full hover:bg-white hover:shadow-sm"
+            className="rounded-full hover:bg-white hover:shadow-sm cursor-pointer"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -515,7 +495,7 @@ const UpcomingTrips: React.FC = () => {
           </h1>
         </div>
         <Button
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
           onClick={() => router.push("/dashboard/create-trip")}
         >
           <Plus className="h-4 w-4" />
@@ -545,7 +525,7 @@ const UpcomingTrips: React.FC = () => {
             </p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
               onClick={() => router.replace("/dashboard/create-trip")}
             >
               <Plus className="h-4 w-4 mr-2" />

@@ -99,7 +99,7 @@ export function DayCard({
               <Button
                 asChild
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
               >
                 <Link href={`/itinerary/${tripId}/edit/${day._id}`}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -109,10 +109,10 @@ export function DayCard({
               <Button
                 variant="destructive"
                 size="sm"
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 cursor-pointer"
                 onClick={handleDeleteItinerary}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 h-4 w-4 cursor-pointer" />
                 Delete Day
               </Button>
             </>

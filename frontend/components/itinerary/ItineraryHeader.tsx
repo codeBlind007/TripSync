@@ -25,7 +25,7 @@ export function ItineraryHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full"
+          className="rounded-full cursor-pointer"
           onClick={() => router.back()}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -44,7 +44,7 @@ export function ItineraryHeader({
         {!isCompleted && (
           <Button
             asChild
-            className="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto"
+            className="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto cursor-pointer"
           >
             <Link href={`/itinerary/${tripId}/add`}>
               <Plus className="h-4 w-4 mr-2" />

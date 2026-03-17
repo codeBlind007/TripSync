@@ -14,11 +14,15 @@ export const sendInvitationEmail = async ({
   inviterName,
   expiresAt,
 }) => {
-  const inviteLink = `${process.env.CLIENT_URL}/invite/accept?token=${token}`;
-  console.log(process.env.CLIENT_URL);
+  const isProduction = process.env.NODE_ENV === "production";
+  const appUrl = isProduction
+    ? process.env.DEPLOYED_FRONTEND_URL
+    : process.env.FRONTEND_URL;
+  const inviteLink = `${appUrl}/invite/accept?token=${token}`;
+
 
   const html = inviteEmailTemplate({
-    appLink: process.env.CLIENT_URL,
+    appLink: process.env.appUrl,
     inviterName,
     tripName,
     inviteLink,

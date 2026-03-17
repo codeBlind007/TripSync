@@ -55,7 +55,7 @@ export function ActivityCard({
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
                 >
                   <Link
                     href={{

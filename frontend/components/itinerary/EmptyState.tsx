@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   Plus,
-  Share2,
   CalendarDays,
   Clock,
   MapPin,
@@ -29,7 +28,7 @@ export function EmptyState({ tripId, isCompleted }: EmptyStateProps) {
               variant="ghost"
               size="icon"
               asChild
-              className="rounded-full"
+              className="rounded-full cursor-pointer"
               onClick={() => router.back()}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -42,12 +41,8 @@ export function EmptyState({ tripId, isCompleted }: EmptyStateProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
             {!isCompleted && (
-              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 cursor-pointer">
                 <Link href={`/itinerary/${tripId}/edit/}`}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Activities
@@ -78,7 +73,7 @@ export function EmptyState({ tripId, isCompleted }: EmptyStateProps) {
                 <Button
                   size="lg"
                   asChild
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
                 >
                   <Link href={`/itinerary/${tripId}/add`}>
                     <Plus className="h-5 w-5 mr-2" />

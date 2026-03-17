@@ -25,7 +25,7 @@ export function AddMoreCTA({ tripId }: AddMoreCTAProps) {
               experiences
             </p>
           </div>
-          <Button asChild className="bg-blue-600 hover:bg-blue-700">
+          <Button asChild className="bg-blue-600 hover:bg-blue-700 cursor-pointer">
             <Link href={`/itinerary/${tripId}/add`}>
               <Plus className="h-4 w-4 mr-2" />
               Add New Itinerary Day
