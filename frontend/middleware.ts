@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public routes
-  const publicRoutes = ["/", "/login", "/signup"];
+  const publicRoutes = ["/", "/login", "/signup", "/invite"];
 
   // If logged in user tries to access login/signup
   if (token && (pathname === "/login" || pathname === "/signup")) {

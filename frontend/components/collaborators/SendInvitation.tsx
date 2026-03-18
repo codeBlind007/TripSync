@@ -81,7 +81,7 @@ const SendInvitation = ({tripId, onSent}: pageProps) => {
                 <>Sending...</>
               ) : (
                 <>
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-4 h-4 mr-2 cursor-pointer" />
                   Send Invite
                 </>
               )}
