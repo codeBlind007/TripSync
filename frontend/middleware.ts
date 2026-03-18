@@ -5,8 +5,11 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Public routes
-  const publicRoutes = ["/", "/login", "/signup", "/invite"];
+  const publicPrefixes = ["/invite"];
+
+  const isPublic =
+    ["/", "/login", "/signup"].includes(pathname) ||
+    publicPrefixes.some((route) => pathname.startsWith(route));
 
   // If logged in user tries to access login/signup
   if (token && (pathname === "/login" || pathname === "/signup")) {
@@ -14,7 +17,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Protect all other routes
-  if (!token && !publicRoutes.includes(pathname)) {
+  if (!token && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
