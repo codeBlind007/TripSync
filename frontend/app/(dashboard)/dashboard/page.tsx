@@ -195,15 +195,13 @@ export default async function Page() {
   const dashboardData = await fetchDashboardData();
 
   return (
-    <>
-      {dashboardData.user && (
-        <DashboardClient
-          upcomingTrips={dashboardData.upcomingTrips}
-          recentTrips={dashboardData.recentTrips}
-          stats={dashboardData.stats}
-          user={dashboardData.user}
-        />
-      )}
-    </>
+    dashboardData.user && (
+      <DashboardClient
+        upcomingTrips={dashboardData.upcomingTrips}
+        recentTrips={dashboardData.recentTrips}
+        stats={dashboardData.stats}
+        user={dashboardData.user}
+      />
+    )
   );
 }

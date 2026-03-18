@@ -89,6 +89,7 @@ const TripRoom = ({
         <ChatHeader
           memberCount={roomCollab.length}
           collaborators={roomCollab}
+          fallbackHref={isCompleted ? "/completed-trips" : "/ongoing-trips"}
         />
         <ChatBody messages={messages} userId={userDetails._id} />
         {!isCompleted && <ChatInput onSend={sendMessage} />}

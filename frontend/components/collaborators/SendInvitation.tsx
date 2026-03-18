@@ -76,7 +76,7 @@ const SendInvitation = ({tripId, onSent}: pageProps) => {
                 disabled={loading}
               />
             </div>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="cursor-pointer">
               {loading ? (
                 <>Sending...</>
               ) : (

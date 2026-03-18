@@ -32,7 +32,7 @@ export function EmptyState({
               : "Start tracking your trip expenses by adding your first expense below."}
           </p>
           {!isCompleted && (
-            <Button onClick={onAddExpense} className="gap-2">
+            <Button onClick={onAddExpense} className="gap-2 cursor-pointer">
               <PlusCircle className="h-4 w-4" />
               Add First Expense
             </Button>
@@ -46,7 +46,7 @@ export function EmptyState({
           <p className="text-gray-600 mb-4">
             Try adjusting your search or filter criteria.
           </p>
-          <Button variant="outline" onClick={onClearFilters} className="gap-2">
+          <Button variant="outline" onClick={onClearFilters} className="gap-2 cursor-pointer">
             Clear Filters
           </Button>
         </>

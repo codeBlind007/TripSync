@@ -1,6 +1,17 @@
 "use client";
 import { CheckCircle2, Circle, Edit3, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface AssignedTo {
   _id: string;
@@ -64,7 +75,7 @@ export function TaskItem({
         <button
           onClick={() => !isCompleted && onToggleComplete(task._id)}
           disabled={isCompleted}
-          className={`flex-shrink-0 mt-0.5 transition-colors ${
+          className={`flex-shrink-0 mt-0.5 transition-colors cursor-pointer ${
             task.completed
               ? "text-green-600 hover:text-green-700"
               : "text-gray-400 hover:text-gray-600"
@@ -116,18 +127,39 @@ export function TaskItem({
                   onClick={() =>
                     router.push(`/edit-tasks/${tripId}/task/${task.taskId}`)
                   }
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                   aria-label={`Edit task: ${task.text}`}
                 >
                   <Edit3 className="h-4 w-4" />
                 </button>
-                <button
-                  onClick={handleDelete}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  aria-label={`Delete task: ${task.text}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      aria-label={`Delete task: ${task.text}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete task?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete &quot;{task.text}&quot;.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
           </div>

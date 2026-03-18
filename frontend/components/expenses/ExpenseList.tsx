@@ -159,7 +159,7 @@ export default function ExpenseList({
                 <Button
                   size="sm"
                   onClick={handleAddExpense}
-                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 cursor-pointer"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add Expense

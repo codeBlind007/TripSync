@@ -60,7 +60,7 @@ export function TasksFilters({
           </span>
           <button 
             onClick={onClearFilters}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium cusror-pointer"
           >
             Clear filters
           </button>

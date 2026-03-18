@@ -25,7 +25,7 @@ export function TasksListHeader({
         variant="ghost"
         size="icon"
         asChild
-        className="rounded-full"
+        className="rounded-full cursor-pointer"
         onClick={() => router.back()}
       >
         <ChevronLeft className="h-5 w-5" />
@@ -48,7 +48,7 @@ export function TasksListHeader({
             </div>
             {!isCompleted && (
               <button
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer"
                 onClick={onAddTask}
               >
                 <Plus className="h-4 w-4 mr-2" />

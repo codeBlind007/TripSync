@@ -5,15 +5,15 @@ import OngoingTrips from "@/components/ongoingTrips/ongoing-trips";
 
 export const dynamic = "force-dynamic";
 
-const ongoingTrips = async () => {
+async function OngoingTripsContent() {
   const data = await getOngoingTrips();
+  const trips: Trip[] = data?.trips ?? data ?? [];
 
-  const ongoingTrips: Trip[] = data?.trips ?? data ?? [];
-  return (
-    <div>
-      <OngoingTrips ongoingTrips={ongoingTrips} />
-    </div>
-  );
+  return <OngoingTrips ongoingTrips={trips} />;
+}
+
+const ongoingTripsPage = () => {
+  return <OngoingTripsContent />;
 };
 
-export default ongoingTrips;
+export default ongoingTripsPage;

@@ -7,6 +7,17 @@ import Link from "next/link";
 import { ActivityCard } from "./ActivityCard";
 import type { ItineraryDay } from "./ItineraryClient";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface DayCardProps {
   day: ItineraryDay;
@@ -45,11 +56,7 @@ export function DayCard({
     return diffDays + 1;
   };
 
-  const handleDeleteItinerary = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    e.preventDefault();
-
+  const handleDeleteItinerary = async () => {
     const res = await fetch(
       `${API_BASE_URL}/api/trips/${tripId}/itinerary/${itineraryId}`,
       {
@@ -106,15 +113,36 @@ export function DayCard({
                   Add Activity
                 </Link>
               </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="bg-red-600 hover:bg-red-700 cursor-pointer"
-                onClick={handleDeleteItinerary}
-              >
-                <Trash2 className="mr-2 h-4 w-4 cursor-pointer" />
-                Delete Day
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 cursor-pointer"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4 cursor-pointer" />
+                    Delete Day
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Day {dayNumber}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently remove this day and all of its
+                      activities. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteItinerary}
+                      className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"
+                    >
+                      Delete Day
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
           )}
         </div>

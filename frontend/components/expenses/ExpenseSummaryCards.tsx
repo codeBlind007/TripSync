@@ -20,7 +20,7 @@ export function ExpenseSummaryCards({
     <div className="space-y-4">
       
       {/* Back Button */}
-      <Button variant="ghost" size="icon" asChild className="rounded-full" onClick={() => router.back()}>
+      <Button variant="ghost" size="icon" asChild className="rounded-full cursor-pointer" onClick={() => router.back()}>
           <ChevronLeft className="h-5 w-5" />
       </Button>
 

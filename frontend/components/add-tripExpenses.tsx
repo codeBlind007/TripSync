@@ -48,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const expenseFormSchema = z.object({
-  amount: z.number().min(0.01, "Amount must be at least $0.01"),
+  amount: z.number().min(1, "Amount must be at least ₹1"),
   category: z.string().min(1, "Please select a category"),
   note: z.string().min(1, "Please add a description for this expense"),
   date: z.date(),
@@ -214,7 +214,7 @@ export function ExpenseForm({ tripId, currentUserId, collaborators}: ExpenseForm
           variant="ghost"
           size="sm"
           onClick={() => router.back()}
-          className="gap-2"
+          className="gap-2 cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -281,7 +281,7 @@ export function ExpenseForm({ tripId, currentUserId, collaborators}: ExpenseForm
                         <FormControl>
                           <div className="relative">
                             <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                              $
+                              <IndianRupee className="h-4 w-4"></IndianRupee>
                             </span>
                             <Input
                               type="number"
@@ -580,7 +580,7 @@ export function ExpenseForm({ tripId, currentUserId, collaborators}: ExpenseForm
                   variant="outline"
                   onClick={prevStep}
                   disabled={step === 1}
-                  className="gap-2"
+                  className="gap-2 cursor-pointer"
                 >
                   Previous
                 </Button>
@@ -591,7 +591,7 @@ export function ExpenseForm({ tripId, currentUserId, collaborators}: ExpenseForm
                       type="button"
                       onClick={nextStep}
                       disabled={!isStepValid(step)}
-                      className="gap-2 bg-blue-600 hover:bg-blue-700"
+                      className="gap-2 bg-blue-600 hover:bg-blue-700 cursor-pointer"
                     >
                       Continue
                       <ArrowLeft className="h-4 w-4 rotate-180" />

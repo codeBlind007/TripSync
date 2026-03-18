@@ -91,7 +91,7 @@ export default function AddTripItinerary({ tripId, onClose }: AddTripItineraryPr
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full p-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full p-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             aria-label="Close modal"
             type="button"
           >
@@ -148,14 +148,14 @@ export default function AddTripItinerary({ tripId, onClose }: AddTripItineraryPr
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-200"
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-200 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 min-w-[110px]"
+              className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 active:bg-indigo-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 min-w-[110px] cursor-pointer"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">

@@ -51,7 +51,7 @@ export function ExpenseFilters({
         
         <div className="flex gap-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 cursor-pointer">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -66,7 +66,7 @@ export function ExpenseFilters({
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 cursor-pointer">
               <ChevronDown className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -92,7 +92,7 @@ export function ExpenseFilters({
               setSearchTerm('');
               setCategoryFilter('all');
             }}
-            className="text-xs h-6 px-2"
+            className="text-xs h-6 px-2 cursor-pointer"
           >
             Clear filters
           </Button>

@@ -70,7 +70,7 @@ const CollaboratorsList = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
                 onClick={(e) => handleRemoveCollaborator(e, tripId, collab._id)}
               >
                 Remove

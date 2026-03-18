@@ -338,7 +338,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex flex-wrap gap-2 pt-5 border-t border-gray-100">
+        <div className="flex flex-wrap gap-2 pt-5 border-t border-gray-100 cursor-pointer">
           <Button
             variant="ghost"
             size="sm"

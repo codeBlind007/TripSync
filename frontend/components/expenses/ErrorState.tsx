@@ -19,7 +19,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
           <p className="text-gray-600 mb-6">{error}</p>
-          <Button onClick={onRetry} variant="outline" className="gap-2">
+          <Button onClick={onRetry} variant="outline" className="gap-2 cursor-pointer">
             <RefreshCw className="h-4 w-4" />
             Try Again
           </Button>

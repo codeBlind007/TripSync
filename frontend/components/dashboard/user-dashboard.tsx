@@ -105,21 +105,23 @@ export default function DashboardClient({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {stats.map((stat, index) => {
           const IconComponent = iconMap[stat.icon];
           return (
             <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center space-x-2 sm:space-x-3">
                   {IconComponent && (
-                    <IconComponent className="h-5 w-5 text-muted-foreground" />
+                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   )}
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
                       {stat.label}
                     </p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-xl sm:text-2xl font-bold leading-none">
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
               </CardContent>

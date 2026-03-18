@@ -1,5 +1,8 @@
-import { MoreVertical, Users } from "lucide-react";
+"use client";
+
+import { ArrowLeft, MoreVertical, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -18,6 +21,7 @@ interface Collaborator {
 interface ChatHeaderProps {
   memberCount?: number;
   collaborators: Collaborator[];
+  fallbackHref?: string;
 }
 
 const avatarColors = [
@@ -36,12 +40,41 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-const ChatHeader = ({ memberCount = 0, collaborators }: ChatHeaderProps) => {
+const ChatHeader = ({
+  memberCount = 0,
+  collaborators,
+  fallbackHref = "/dashboard",
+}: ChatHeaderProps) => {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push(fallbackHref);
+  };
+
   return (
     <div className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm sm:px-6">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-800">Trip Room Chat</h2>
-        <p className="text-xs text-gray-500">{memberCount} members</p>
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleBack}
+          aria-label="Go back"
+          className="h-9 w-9 shrink-0 cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold text-gray-800 sm:text-lg">
+            Trip Room Chat
+          </h2>
+          <p className="text-xs text-gray-500">{memberCount} members</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

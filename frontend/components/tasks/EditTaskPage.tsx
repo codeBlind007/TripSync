@@ -71,7 +71,7 @@ export function EditTaskPage({
         <div className="mb-8">
           <button
             onClick={handleCancel}
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Tasks
@@ -136,7 +136,7 @@ export function EditTaskPage({
                 <button
                   type="button"
                   onClick={() => setIsCompleted(false)}
-                  className={`flex items-center gap-3 w-full px-4 py-4 border-2 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 w-full px-4 py-4 border-2 rounded-lg transition-all cursor-pointer ${
                     !isCompleted
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-300 bg-white hover:border-gray-400"
@@ -157,7 +157,7 @@ export function EditTaskPage({
                 <button
                   type="button"
                   onClick={() => setIsCompleted(true)}
-                  className={`flex items-center gap-3 w-full px-4 py-4 border-2 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 w-full px-4 py-4 border-2 rounded-lg transition-all cursor-pointer${
                     isCompleted
                       ? "border-green-500 bg-green-50"
                       : "border-gray-300 bg-white hover:border-gray-400"
@@ -182,14 +182,14 @@ export function EditTaskPage({
                 type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !taskText.trim() || !selectedAssignee}
-                className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
