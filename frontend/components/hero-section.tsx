@@ -12,7 +12,7 @@ export default function HeroSection() {
       <main className="overflow-x-hidden">
         <section className="relative isolate">
           <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_45%),radial-gradient(circle_at_80%_20%,#ccfbf1_0%,transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,#0f172a_0%,transparent_45%),radial-gradient(circle_at_80%_20%,#0f3a44_0%,transparent_40%)]" />
-          <div className="pb-24 pt-12 md:pb-32 lg:pb-40 lg:pt-44">
+          <div className="pb-24 pt-16 sm:pt-20 md:pb-32 md:pt-24 lg:pb-40 lg:pt-28">
             <div className="relative mx-auto flex max-w-6xl flex-col px-6 lg:min-h-[34rem] lg:block">
               <div className="mx-auto max-w-lg text-center lg:ml-0 lg:w-1/2 lg:text-left">
                 <h1 className="mt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:mt-16 xl:text-7xl">

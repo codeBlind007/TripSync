@@ -19,6 +19,8 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
+import { Logo, LogoGlobe } from "@/components/logo";
 
 interface User {
   name: string;
@@ -74,15 +76,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div
-          className={`flex items-center h-14 font-bold text-xl ${
+          className={`flex h-14 items-center ${
             isMobile
-              ? "px-4 justify-start"
+              ? "pl-2 pr-4 justify-start"
               : state === "collapsed"
-                ? "justify-center"
-                : "px-4"
+                ? "pl-2 pr-2 justify-start"
+                : "pl-2 pr-4 justify-start"
           }`}
         >
-          {isMobile || state === "expanded" ? "TripSync" : "TS"}
+          <Link href="/" aria-label="Go to home" className="flex items-center">
+            {isMobile || state === "expanded" ? (
+              <Logo alt="TripSync" className="w-28 sm:w-32" />
+            ) : (
+              <LogoGlobe className="w-8" />
+            )}
+          </Link>
         </div>
       </SidebarHeader>
       <SidebarContent>

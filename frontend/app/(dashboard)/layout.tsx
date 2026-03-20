@@ -26,7 +26,7 @@ export default function DashboardLayout({
 
       <SidebarInset className="flex flex-col min-h-screen">
         {/* Header */}
-        <header className="h-14 flex items-center gap-3 border-b px-3 sm:px-4">
+        <header className="sticky top-0 z-40 h-14 flex items-center gap-3 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-4">
           <SidebarTrigger />
           <h1 className="font-semibold">Dashboard</h1>
         </header>

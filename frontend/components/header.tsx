@@ -17,23 +17,19 @@ export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   return (
     <header>
-      <nav className="fixed inset-x-0 top-0 z-50 pt-3 lg:pt-4">
+      <nav className="fixed inset-x-0 top-0 z-50 pt-2 sm:pt-3 lg:pt-4">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 transition-all duration-300">
           <div
             data-state={menuState && "active"}
-            className="relative flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-sky-200/70 bg-white/70 px-4 py-3 shadow-[0_12px_35px_-20px_rgba(2,132,199,0.55)] backdrop-blur-2xl dark:border-slate-700/80 dark:bg-slate-950/70 lg:gap-0 lg:px-6 lg:py-3"
+            className="relative flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-sky-200/70 bg-white/70 px-3 py-2 shadow-[0_12px_35px_-20px_rgba(2,132,199,0.55)] backdrop-blur-2xl dark:border-slate-700/80 dark:bg-slate-950/70 sm:px-4 sm:py-2.5 lg:gap-0 lg:px-6 lg:py-3"
           >
             <div
               aria-hidden
               className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent"
             />
-            <div className="flex w-full items-center justify-between gap-12 lg:w-auto">
+            <div className="flex w-full items-center justify-between gap-4 lg:w-auto lg:gap-12">
               <Link href="/" aria-label="home" className="flex items-center">
-                <Logo
-                  src="/logo.png"
-                  alt="TripSync"
-                  className="h-10 w-auto mix-blend-multiply dark:mix-blend-screen"
-                />
+                <Logo alt="TripSync" className="h-auto w-28 sm:w-36 lg:w-40" />
               </Link>
 
               <button
