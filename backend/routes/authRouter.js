@@ -1,8 +1,10 @@
 import express from "express";
-const router = express.Router();
+import { createAccountValidation, loginValidation } from "../middlewares/authValidation.js";
 import authController from "../controllers/authController.js";
-router.route('/auth/create-account').post(authController.createAccount);
-router.route('/auth/login').post(authController.login);
+const router = express.Router();
+
+router.route('/auth/create-account').post(createAccountValidation, authController.createAccount);
+router.route('/auth/login').post(loginValidation, authController.login);
 router.route('/auth/logout').post(authController.logout);
 
 export default router;

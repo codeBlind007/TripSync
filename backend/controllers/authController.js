@@ -1,6 +1,7 @@
 // controllers/authController.js
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import validator from "validator";
 import dotenv from "dotenv";
 import userSchema from "../models/User.js";
 import tripController from "./tripController.js";
@@ -12,7 +13,7 @@ const getAuthCookieOptions = () => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: "lax",
     maxAge: 72 * 60 * 60 * 1000,
     path: "/",
   };
@@ -26,21 +27,17 @@ const getAuthCookieOptions = () => {
 
 const createAccount = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password } = req.validatedData;
     const { invite: inviteToken } = req.query;
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        error: true,
-        message: "All fields required",
-      });
-    }
+    let errors = {}
 
     const isUser = await userSchema.findOne({ email });
     if (isUser) {
-      return res.status(400).json({
-        error: true,
-        message: "User already exists",
-      });
+      errors.email = "Email is already registered";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ error: true, errors });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -79,28 +76,49 @@ const createAccount = async (req, res, next) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
-  const { invite: inviteToken } = req.query;
-  const user = await userSchema.findOne({ email });
-  if (!user) return res.status(400).json({ message: "User not found" });
+  try {
+    const { invite: inviteToken } = req.query;
+    const {email, password} = req.validatedData;
+    
+    const user = await userSchema.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        error: true,
+        errors: { user: "User not found" },
+      });
+    }
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid)
-    return res.status(400).json({ message: "Invalid credentials" });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        error: true,
+        errors: { credentials: "Invalid credentials" },
+      });
+    }
 
-  const accessToken = jwt.sign(
-    { userId: user._id },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "72h" },
-  );
+    const accessToken = jwt.sign(
+      { userId: user._id },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "72h" },
+    );
 
-  res.cookie("token", accessToken, getAuthCookieOptions());
+    res.cookie("token", accessToken, getAuthCookieOptions());
 
-  if (inviteToken) {
-    await tripController.acceptInvitation(inviteToken);
+    if (inviteToken) {
+      await tripController.acceptInvitation(inviteToken);
+    }
+
+    return res.status(200).json({
+      error: false,
+      user: { fullName: user.fullName, email: user.email },
+      message: "Login Successful",
+    });
+  } catch (error) {
+    console.error("login error:", error);
+    return res.status(500).json({
+      message: "Failed to login",
+    });
   }
-
-  return res.json({ message: "Login successful" });
 };
 
 const logout = (req, res) => {

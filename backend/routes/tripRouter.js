@@ -3,13 +3,14 @@ import authController from "../controllers/authController.js";
 import upload from "../utils/multer.js";
 import tripController from "../controllers/tripController.js";
 import tripRoomController from "../controllers/tripRoomController.js";
+import { createTripValidation } from "../middlewares/tripValidation.js";
 import { validateInvitationRequest, getRecievedInvitation, getSentInvitation, acceptReceivedInvitation } from "../controllers/invitationController.js";
 const router = express.Router();
 
 router
   .route("/trips")
   .get(authController.protect, tripController.getAllUserTrips)
-  .post(authController.protect, tripController.createTrip);
+  .post(authController.protect, createTripValidation, tripController.createTrip);
 
 router
   .route("/trips/:tripId")

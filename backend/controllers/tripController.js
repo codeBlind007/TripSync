@@ -6,6 +6,7 @@ import InvitationModel from "../models/Invitation.js";
 import { sendInvitationEmail } from "./invitationController.js";
 import { randomBytes } from "crypto";
 import { tryCatch } from "bullmq";
+import e from "express";
 // get all the stories
 
 const getAllUserTrips = async (req, res, next) => {
@@ -17,10 +18,11 @@ const getAllUserTrips = async (req, res, next) => {
       $or: [{ owner: userId }, { collaborators: userId }],
     }).sort({ createdAt: -1 });
 
-    if (!trips) {
+    if (trips.length === 0) {
       res.status(200).json({
-        message: "No trips available",
-      });
+        status: "success",
+        message: "No trips found for this user.",
+      })
     }
     res.status(200).json({
       status: "success",
@@ -35,28 +37,22 @@ const getAllUserTrips = async (req, res, next) => {
 
 const createTrip = async (req, res) => {
   try {
-    const { title, description, startDate, endDate, destination } = req.body;
+    const { title, description, startDate, endDate, destination } = req.validatedData;
     const { userId: ownerId } = req.user || {};
-
+    let error = {};
     // Validate userId presence
     if (!ownerId) {
-      return res.status(400).json({ status: "error", message: "User ID missing from request" });
+      error.user = "User ID is required in the request";
     }
 
-    // Validate required fields
-    if (!title || !startDate || !endDate || !destination) {
-      return res.status(400).json({ status: "error", message: "Title, start date, end date and destination are required" });
-    }
-
-    // Validate date format
-    if (isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate))) {
-      return res.status(400).json({ status: "error", message: "Invalid date format" });
+    if (Object.keys(error).length > 0) {
+      return res.status(400).json({ status: "error", errors: error });
     }
 
     // Ensure user exists
     const user = await User.findById(ownerId);
     if (!user) {
-      return res.status(404).json({ status: "error", message: "User not found" });
+      return res.status(401).json({ status: "error", message: "User not found" });
     }
 
     // Create trip
