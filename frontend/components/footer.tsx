@@ -62,7 +62,7 @@ export default function FooterSection({
   return (
     <footer className={footerClasses}>
       <div aria-hidden className={topFadeClasses} />
-      <div className="relative mx-auto max-w-5xl px-6">
+      <div className="relative mx-auto max-w-[84rem] px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="go home" className="mx-auto block size-fit">
           <Logo alt="TripSync" className="w-40 sm:w-48" />
         </Link>

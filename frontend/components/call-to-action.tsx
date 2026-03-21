@@ -11,7 +11,7 @@ export default function CallToAction() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/80 to-transparent dark:from-slate-900/70"
       />
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-[84rem] px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-3xl border border-sky-200/70 bg-white/85 px-6 py-12 text-center shadow-xl shadow-sky-200/30 backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-900/70 md:px-10">
           <h2 className="text-balance text-4xl font-semibold lg:text-5xl">
             Ready to organize your next group trip in minutes?

@@ -4,7 +4,7 @@ export default function ContentSection() {
       id="how-it-works"
       className="bg-gradient-to-b from-background to-cyan-100/60 py-16 md:pt-24 md:pb-20 dark:to-slate-900/80"
     >
-      <div className="mx-auto max-w-5xl space-y-8 px-6 md:space-y-16">
+      <div className="mx-auto max-w-[84rem] space-y-8 px-4 sm:px-6 md:space-y-16 lg:px-8">
         <h2 className="relative z-10 max-w-xl text-4xl font-medium lg:text-5xl">
           From invite to check-in, everyone stays on the same page.
         </h2>

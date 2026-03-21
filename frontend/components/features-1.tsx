@@ -8,7 +8,7 @@ export default function Features() {
       id="features"
       className="bg-gradient-to-b from-sky-50 to-cyan-50/40 py-16 md:py-32 dark:from-slate-950 dark:to-slate-900"
     >
-      <div className="@container mx-auto max-w-5xl px-6">
+      <div className="@container mx-auto max-w-[84rem] px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-balance text-4xl font-semibold lg:text-5xl">
             Everything your travel group needs, in one flow.
