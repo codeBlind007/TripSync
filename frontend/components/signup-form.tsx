@@ -46,7 +46,7 @@ export function SignupForm({
         router.push("/dashboard");
       } else {
         const errorData = await res.json();
-        setError(errorData.message || "Login failed. Please try again.");
+        setError(errorData.message || "Signup failed. Please try again.");
       }
     } catch {
       setError("Network error. Please try again later.");

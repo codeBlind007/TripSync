@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ExclamationTriangleIcon, EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
+import {
+  ExclamationTriangleIcon,
+  EyeClosedIcon,
+  EyeOpenIcon,
+} from "@radix-ui/react-icons";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -28,31 +32,33 @@ export function LoginForm({
   const searchParams = useSearchParams();
   const token = searchParams.get("invite");
 
-
-  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login${token ? `?invite=${token}`: ""}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${API_BASE_URL}/api/auth/login${token ? `?invite=${token}` : ""}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
         },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-      
-      if(res.ok && token){
+      );
+
+      const responseData = await res.json().catch(() => null);
+      const isSuccessfulLogin = res.ok && responseData?.success !== false;
+
+      if (isSuccessfulLogin && token) {
         router.push(`/collaborators/${invitedTripId}`);
-      }
-      else if (res.ok) {
-        router.replace('/dashboard');
+      } else if (isSuccessfulLogin) {
+        router.replace("/dashboard");
       } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Login failed. Please try again.");
+        setError(responseData?.message || "Login failed. Please try again.");
       }
     } catch {
       setError("Network error. Please try again later.");
@@ -70,7 +76,7 @@ export function LoginForm({
             `${API_BASE_URL}/api/trips/invitations/validate?token=${token}`,
             {
               credentials: "include",
-            }
+            },
           );
 
           if (res.ok) {
@@ -88,7 +94,6 @@ export function LoginForm({
 
     fetchInvitationData();
   }, [token]);
-
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -118,7 +123,9 @@ export function LoginForm({
                   placeholder="m@example.com"
                   required
                   value={email}
-                  onChange={(e) => {if(!token) setEmail(e.target.value)}}
+                  onChange={(e) => {
+                    if (!token) setEmail(e.target.value);
+                  }}
                   disabled={isLoading}
                   autoComplete="email"
                   readOnly={!!token}
@@ -151,7 +158,9 @@ export function LoginForm({
                     type="button"
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? (
                       <EyeClosedIcon className="h-4 w-4" />
@@ -162,7 +171,11 @@ export function LoginForm({
                 </div>
               </div>
 
-              <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <svg
@@ -279,5 +292,3 @@ export function LoginForm({
     </div>
   );
 }
-
-

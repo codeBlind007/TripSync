@@ -1,57 +1,73 @@
-import joi from 'joi';
+import Joi from "joi";
+import AppError from "../utils/AppError.js";
 
 export const createTripValidation = (req, res, next) => {
-    const { title, description, startDate, endDate, destination } = req.body;
-    const schema = joi.object({
-        title: joi.string().required().min(10).max(50).messages({
-            "string.base": "Title must be a string",
-            "string.empty" : "Title is required",
-            "string.min" : "Title must be 10 characters long",
-            "string.max" : "Title must not be more than 30 characters"
+  const schema = Joi.object({
+    title: Joi.string().min(10).max(50).required().messages({
+      "string.base": "Title must be a string",
+      "string.empty": "Title is required",
+      "string.min": "Title must be at least 10 characters long",
+      "string.max": "Title must not be more than 50 characters",
+    }),
+
+    description: Joi.string().max(150).allow("").optional().messages({
+      "string.base": "Description must be a string",
+      "string.max": "Description must not be more than 150 characters",
+    }),
+
+    startDate: Joi.date().required().messages({
+      "date.base": "Start date must be a valid date",
+      "any.required": "Start date is required",
+    }),
+
+    endDate: Joi.date().greater(Joi.ref("startDate")).required().messages({
+      "date.base": "End date must be a valid date",
+      "any.required": "End date is required",
+      "date.greater": "End date must be greater than start date",
+    }),
+
+    destination: Joi.array()
+      .items(
+        Joi.string().min(3).required().messages({
+          "string.base": "Each destination must be a string",
+          "string.empty": "Destination cannot be empty",
+          "string.min": "Each destination must be at least 3 characters long",
         }),
+      )
+      .min(1)
+      .required()
+      .messages({
+        "array.base": "Destination must be an array of strings",
+        "array.min": "At least one destination is required",
+      }),
+  });
 
-        description: joi.string().max(150).messages({
-            "string.base": "Description must be a string",
-            "string.max" : "description must not be more than 150 characters",
-        }),
+  const { error, value } = schema.validate(req.body, {
+    abortEarly: true,
+    stripUnknown: true,
+  });
 
-        startDate: joi.date().required().messages({
-            "date.base": "Start date must be a valid date",
-            "date.empty" : "Start date is required",
-        }),
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
 
-        endDate: joi.date().required().greater(joi.ref('startDate')).messages({
-            "date.base": "End date must be a valid date",
-            "date.empty" : "End date is required",
-            "date.greater" : "End date must be greater than start date"
-        }),
+  value.title = value.title.trim();
+  value.title = value.title[0].toUpperCase() + value.title.slice(1);
 
-        destination: joi.array().items(joi.string().required().min(3)).min(1).messages({
-            "array.base": "Destination must be an array of strings",
-            "array.min" : "At least one destination is required",   
-            "string.base": "Each destination must be a string",
-            "string.empty" : "Destination cannot be empty",
-            "string.min" : "Each destination must be at least 3 characters long"
-        })
-    });
-
-    const {error, value} = schema.validate({ title, description, startDate, endDate, destination });
-    if(error){
-        return res.status(400).json({ error: error.details[0].message });
-    }
-
-    console.log(value);
-
-    value.title = value.title.trim();
+  if (value.description) {
     value.description = value.description.trim();
-    value.destination = value.destination.map(dest => dest.trim());
+    if (value.description.length > 0) {
+      value.description =
+        value.description[0].toUpperCase() + value.description.slice(1);
+    }
+  }
 
-    value.title = value.title[0].toUpperCase() + value.title.slice(1);
-    value.description = value.description[0].toUpperCase() + value.description.slice(1);
-    value.destination = value.destination.map(dest => dest[0].toUpperCase() + dest.slice(1));
+  value.destination = value.destination.map((dest) => {
+    const d = dest.trim();
+    return d[0].toUpperCase() + d.slice(1);
+  });
 
-    console.log("Transformed Value: ", value);
+  req.validatedData = value;
 
-    req.validatedData = value;
-    next();
-}
+  next();
+};

@@ -5,33 +5,32 @@ import User from "../models/User.js";
 import InvitationModel from "../models/Invitation.js";
 import { sendInvitationEmail } from "./invitationController.js";
 import { randomBytes } from "crypto";
-import { tryCatch } from "bullmq";
-import e from "express";
+import AppError from "../utils/AppError.js";
 // get all the stories
 
 const getAllUserTrips = async (req, res, next) => {
-  const start = new Date("2025-08-01");
-  const end = new Date("2025-08-10");
   try {
     const { userId } = req.user;
+
+    if(!userId) {
+      throw new AppError("User ID is required in the request", 400);
+    }
+
     const trips = await TripModel.find({
       $or: [{ owner: userId }, { collaborators: userId }],
     }).sort({ createdAt: -1 });
 
     if (trips.length === 0) {
-      res.status(200).json({
-        status: "success",
-        message: "No trips found for this user.",
-      })
+      throw new AppError("No trips found for this user", 404);
     }
     res.status(200).json({
-      status: "success",
+      success: true,
       results: trips.length,
       data: trips,
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
@@ -39,20 +38,14 @@ const createTrip = async (req, res) => {
   try {
     const { title, description, startDate, endDate, destination } = req.validatedData;
     const { userId: ownerId } = req.user || {};
-    let error = {};
-    // Validate userId presence
+    
     if (!ownerId) {
-      error.user = "User ID is required in the request";
+      throw new AppError("User not authenticated", 401);
     }
 
-    if (Object.keys(error).length > 0) {
-      return res.status(400).json({ status: "error", errors: error });
-    }
-
-    // Ensure user exists
     const user = await User.findById(ownerId);
     if (!user) {
-      return res.status(401).json({ status: "error", message: "User not found" });
+      throw new AppError("User not found", 404);
     }
 
     // Create trip
@@ -70,17 +63,13 @@ const createTrip = async (req, res) => {
     await user.save();
 
     return res.status(201).json({
-      status: "success",
+      success: true,
       data: trip,
     });
 
   } catch (error) {
     console.error("Error creating trip:", error);
-    return res.status(500).json({
-      status: "error",
-      message: "Failed to create trip",
-      error: error.message,
-    });
+    next(error);
   }
 };
 

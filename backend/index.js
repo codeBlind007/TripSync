@@ -27,6 +27,7 @@ import userRouter from "./routes/userRouter.js";
 import authRouter from "./routes/authRouter.js";
 import { socketController } from "./controllers/socketController.js";
 import { connectDB } from "./utils/db.js";
+import { errorMiddleware } from "./middlewares/errorMiddleware.js";
 
 await connectDB();
 
@@ -124,12 +125,22 @@ socketController(io);
 app.use("/api", tripRouter);
 app.use("/api", userRouter);
 app.use('/api', authRouter);
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 
 app.get("/health-check", (req, res) => {
   res.send("Welcome to the TripSync API");
 });
+
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
+app.use(errorMiddleware);
 
 const PORT = 8000;
 server.listen(PORT, () => {
