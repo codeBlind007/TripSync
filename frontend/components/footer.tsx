@@ -40,20 +40,20 @@ export default function FooterSection({
   const isMarketing = variant === "marketing";
 
   const footerClasses = isMarketing
-    ? "relative overflow-hidden border-t border-sky-200/60 bg-gradient-to-b from-sky-50 via-cyan-50/60 to-background py-16 text-foreground md:py-24 dark:border-slate-800"
+    ? "relative overflow-hidden border-t border-sky-200/60 bg-gradient-to-b from-sky-50 via-cyan-50/60 to-background py-16 text-foreground md:py-24 "
     : "relative overflow-hidden border-t border-border/60 bg-background py-16 text-foreground md:py-20";
 
   const topFadeClasses = isMarketing
-    ? "pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/80 to-transparent dark:from-slate-800/30"
-    : "pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-sky-100/40 to-transparent dark:from-slate-800/30";
+    ? "pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/80 to-transparent "
+    : "pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-sky-100/40 to-transparent ";
 
   const linkClasses = isMarketing
-    ? "text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block duration-150"
-    : "text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block duration-150";
+    ? "text-muted-foreground hover:text-cyan-700  block duration-150"
+    : "text-muted-foreground hover:text-cyan-700  block duration-150";
 
   const socialClasses = isMarketing
-    ? "text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block"
-    : "text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block";
+    ? "text-muted-foreground hover:text-cyan-700  block"
+    : "text-muted-foreground hover:text-cyan-700  block";
 
   const copyrightClasses = isMarketing
     ? "block text-center text-sm text-muted-foreground"

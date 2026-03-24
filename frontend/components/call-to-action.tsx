@@ -9,10 +9,10 @@ export default function CallToAction() {
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/80 to-transparent dark:from-slate-900/70"
+        className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/80 to-transparent "
       />
       <div className="mx-auto max-w-[84rem] px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl border border-sky-200/70 bg-white/85 px-6 py-12 text-center shadow-xl shadow-sky-200/30 backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-900/70 md:px-10">
+        <div className="relative rounded-3xl border border-sky-200/70 bg-white/85 px-6 py-12 text-center shadow-xl shadow-sky-200/30 backdrop-blur-sm   md:px-10">
           <h2 className="text-balance text-4xl font-semibold lg:text-5xl">
             Ready to organize your next group trip in minutes?
           </h2>
@@ -36,7 +36,7 @@ export default function CallToAction() {
               asChild
               size="lg"
               variant="outline"
-              className="border-cyan-200 bg-white text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:bg-slate-900 dark:text-cyan-200 dark:hover:bg-slate-800"
+              className="border-cyan-200 bg-white text-cyan-700 hover:bg-cyan-50    "
             >
               <Link href="/login">
                 <span>Go to Login</span>

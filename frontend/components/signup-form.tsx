@@ -211,7 +211,7 @@ export function SignupForm({
             <Image
               src="/login-bg.jpg"
               alt="Image"
-              className="absolute inset-0 h-full w-full object-cover transition-all duration-500 dark:brightness-100 dark:contrast-125"
+              className="absolute inset-0 h-full w-full object-cover transition-all duration-500  "
               fill
             />
           </div>

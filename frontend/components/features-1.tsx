@@ -6,7 +6,7 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="bg-gradient-to-b from-sky-50 to-cyan-50/40 py-16 md:py-32 dark:from-slate-950 dark:to-slate-900"
+      className="bg-gradient-to-b from-sky-50 to-cyan-50/40 py-16 md:py-32  "
     >
       <div className="@container mx-auto max-w-[84rem] px-4 sm:px-6 lg:px-8">
         <div className="text-center">
@@ -19,7 +19,7 @@ export default function Features() {
           </p>
         </div>
         <div className="@min-4xl:max-w-full @min-4xl:grid-cols-3 mx-auto mt-8 grid max-w-sm gap-6 *:text-center md:mt-16">
-          <Card className="group border-sky-200/70 bg-white/80 shadow-zinc-950/5 backdrop-blur-sm dark:border-sky-800/50 dark:bg-white/5">
+          <Card className="group border-sky-200/70 bg-white/80 shadow-zinc-950/5 backdrop-blur-sm  ">
             <CardHeader className="pb-3">
               <CardDecorator>
                 <MapPinned className="size-6" aria-hidden />
@@ -36,7 +36,7 @@ export default function Features() {
             </CardContent>
           </Card>
 
-          <Card className="group border-cyan-200/70 bg-white/80 shadow-zinc-950/5 backdrop-blur-sm dark:border-cyan-800/50 dark:bg-white/5">
+          <Card className="group border-cyan-200/70 bg-white/80 shadow-zinc-950/5 backdrop-blur-sm  ">
             <CardHeader className="pb-3">
               <CardDecorator>
                 <ListTodo className="size-6" aria-hidden />
@@ -53,7 +53,7 @@ export default function Features() {
             </CardContent>
           </Card>
 
-          <Card className="group border-teal-200/70 bg-white/80 shadow-zinc-950/5 backdrop-blur-sm dark:border-teal-800/50 dark:bg-white/5">
+          <Card className="group border-teal-200/70 bg-white/80 shadow-zinc-950/5 backdrop-blur-sm  ">
             <CardHeader className="pb-3">
               <CardDecorator>
                 <ReceiptText className="size-6" aria-hidden />
@@ -76,7 +76,7 @@ export default function Features() {
 }
 
 const CardDecorator = ({ children }: { children: ReactNode }) => (
-  <div className="relative mx-auto size-36 duration-200 [--color-border:color-mix(in_oklab,var(--color-sky-500)22%,transparent)] group-hover:[--color-border:color-mix(in_oklab,var(--color-cyan-500)30%,transparent)] dark:[--color-border:color-mix(in_oklab,var(--color-cyan-300)22%,transparent)] dark:group-hover:bg-white/5 dark:group-hover:[--color-border:color-mix(in_oklab,var(--color-teal-300)30%,transparent)]">
+  <div className="relative mx-auto size-36 duration-200 [--color-border:color-mix(in_oklab,var(--color-sky-500)22%,transparent)] group-hover:[--color-border:color-mix(in_oklab,var(--color-cyan-500)30%,transparent)]   ">
     <div
       aria-hidden
       className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:24px_24px]"
@@ -85,7 +85,7 @@ const CardDecorator = ({ children }: { children: ReactNode }) => (
       aria-hidden
       className="bg-radial to-background absolute inset-0 from-transparent to-75%"
     />
-    <div className="bg-background/95 text-sky-700 dark:text-cyan-300 absolute inset-0 m-auto flex size-12 items-center justify-center border border-sky-300/70 dark:border-cyan-700/60">
+    <div className="bg-background/95 text-sky-700  absolute inset-0 m-auto flex size-12 items-center justify-center border border-sky-300/70 ">
       {children}
     </div>
   </div>

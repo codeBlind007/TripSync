@@ -20,7 +20,7 @@ export const HeroHeader = () => {
         <div className="mx-auto max-w-[84rem] px-4 sm:px-6 lg:px-8 transition-all duration-300">
           <div
             data-state={menuState && "active"}
-            className="relative flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-sky-200/70 bg-white/70 px-3 py-2 shadow-[0_12px_35px_-20px_rgba(2,132,199,0.55)] backdrop-blur-2xl dark:border-slate-700/80 dark:bg-slate-950/70 sm:px-4 sm:py-2.5 lg:gap-0 lg:px-6 lg:py-3"
+            className="relative flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-sky-200/70 bg-white/70 px-3 py-2 shadow-[0_12px_35px_-20px_rgba(2,132,199,0.55)] backdrop-blur-2xl   sm:px-4 sm:py-2.5 lg:gap-0 lg:px-6 lg:py-3"
           >
             <div
               aria-hidden
@@ -46,7 +46,7 @@ export const HeroHeader = () => {
                     <li key={index}>
                       <Link
                         href={item.href}
-                        className="text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block duration-150"
+                        className="text-muted-foreground hover:text-cyan-700  block duration-150"
                       >
                         <span>{item.name}</span>
                       </Link>
@@ -56,14 +56,14 @@ export const HeroHeader = () => {
               </div>
             </div>
 
-            <div className="in-data-[state=active]:block lg:in-data-[state=active]:flex mb-2 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-2xl border border-sky-200/70 bg-white/85 p-5 shadow-2xl shadow-sky-200/20 backdrop-blur-xl sm:p-6 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:border-slate-700/80 dark:bg-slate-900/90 dark:shadow-none dark:lg:bg-transparent">
+            <div className="in-data-[state=active]:block lg:in-data-[state=active]:flex mb-2 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-2xl border border-sky-200/70 bg-white/85 p-5 shadow-2xl shadow-sky-200/20 backdrop-blur-xl sm:p-6 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none    ">
               <div className="lg:hidden">
                 <ul className="space-y-6 text-base">
                   {menuItems.map((item, index) => (
                     <li key={index}>
                       <Link
                         href={item.href}
-                        className="text-muted-foreground hover:text-cyan-700 dark:hover:text-cyan-300 block duration-150"
+                        className="text-muted-foreground hover:text-cyan-700  block duration-150"
                       >
                         <span>{item.name}</span>
                       </Link>
