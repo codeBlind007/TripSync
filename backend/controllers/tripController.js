@@ -34,7 +34,7 @@ const getAllUserTrips = async (req, res, next) => {
   }
 };
 
-const createTrip = async (req, res) => {
+const createTrip = async (req, res, next) => {
   try {
     const { title, description, startDate, endDate, destination } = req.validatedData;
     const { userId: ownerId } = req.user || {};
@@ -77,42 +77,39 @@ const getTrip = async (req, res, next) => {
   try {
     const { tripId } = req.params;
     if (!tripId) {
-      return res.status(200).json({
-        message: "Trip Id required",
-      });
+      throw new AppError("Trip ID is required", 400);
     }
+
     const trip = await TripModel.findById({ _id: tripId });
     res.status(200).json({
-      status: "success",
+      success: true,
       data: trip,
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
 const deleteTrip = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    if (!tripId) {
-      return res.status(200).json({
-        message: "Trip Id required",
-      });
+
+    if(!tripId){
+      throw new AppError("Trip ID is required", 400);
     }
+
     const trip = await TripModel.findByIdAndDelete({ _id: tripId });
     if (!trip) {
-      return res.status(200).json({
-        message: "Trip not found",
-      });
+      throw new AppError("Trip not found", 404);
     }
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "Trip deleted successfully",
     });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
@@ -122,7 +119,7 @@ const getTripCollaborators = async (req, res, next) => {
     const { userId } = req.user;
 
     if (!tripId) {
-      return res.status(400).json({ message: "Trip ID is required" });
+      throw new AppError("Trip ID is required", 400);
     }
 
     // Find the trip and verify access
@@ -135,23 +132,19 @@ const getTripCollaborators = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res.status(403).json({
-        message: "Trip not found or access denied.",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     // Return collaborator details
     return res.status(200).json({
-      message: "Collaborators fetched successfully",
+      success: true,
+      results: trip.collaborators.length,
       collaborators: trip.collaborators, 
     });
 
   } catch (error) {
     console.error("Error fetching collaborators:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
