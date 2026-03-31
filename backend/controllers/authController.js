@@ -140,7 +140,10 @@ const logout = (req, res) => {
     path: cookieOptions.path,
     ...(cookieOptions.domain ? { domain: cookieOptions.domain } : {}),
   });
-  res.json({ message: "Logged out successfully" });
+  res.status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
 };
 
 const protect = async (req, res, next) => {

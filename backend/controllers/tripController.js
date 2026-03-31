@@ -155,7 +155,7 @@ const addCollaborators = async (req, res, next) => {
     const { collaborators } = req.body;
 
     if (!tripId) {
-      return res.status(400).json({ message: "Trip ID is required" });
+      throw new AppError("Trip ID is required", 400);
     }
 
     if (!Array.isArray(collaborators)) {
@@ -195,29 +195,24 @@ const addCollaborators = async (req, res, next) => {
 
 const deleteCollaborators = async (req, res, next) => {
   try {
+
     const { tripId, collaboratorId } = req.params;
     const { userId: ownerId } = req.user;
 
     if (!tripId || !collaboratorId) {
-      return res.status(400).json({
-        message: "Trip ID and collaborator ID are required",
-      });
+      throw new AppError("TripId and CollboratorsId required", 400);
     }
 
     const trip = await TripModel.findOne({ _id: tripId, owner: ownerId });
 
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found or access denied",
-      });
+      throw new AppError("Trip not found or not owned by you", 404);
     }
 
     // Check if the collaborator exists in the list
     const index = trip.collaborators.indexOf(collaboratorId);
     if (index === -1) {
-      return res.status(404).json({
-        message: "Collaborator not found in this trip",
-      });
+      throw new AppError("Collaborator not found in this trip", 404);
     }
 
     // Remove collaborator
@@ -225,16 +220,13 @@ const deleteCollaborators = async (req, res, next) => {
     await trip.save();
 
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "Collaborator removed successfully",
       collaborators: trip.collaborators,
     });
   } catch (error) {
     console.error("Remove Collaborator Error:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -244,9 +236,7 @@ const getTripItinerary = async (req, res, next) => {
     const { userId } = req.user;
 
     if (!tripId) {
-      return res.status(400).json({
-        message: "Trip ID is required",
-      });
+      throw new AppError("Trip ID is required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -255,31 +245,23 @@ const getTripItinerary = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res.status(400).json({
-        message: "Trip not found or denied access.",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     const activeItinerary = trip.itinerary.filter(day => day.is_deleted !== true);
 
     if (activeItinerary.length > 0) {
       res.status(200).json({
-        status: "success",
+        success: true,
         results: activeItinerary.length,
         data: activeItinerary,
       });
     } else {
-      res.status(200).json({
-        status: "success",
-        message: "No itinerary added for this trip.",
-      });
+      throw new AppError("No itinerary found for this trip", 404);
     }
   } catch (error) {
     console.error("Getting itinerary Error:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -290,9 +272,9 @@ const addItinerary = async (req, res, next) => {
     const { date } = req.body;
 
     if (!date) {
-      return res.status(400).json({
-        message: "Date is required to create a new itinerary day",
-      });
+      throw new AppError("Date is required to add itinerary", 400);
+    }else if(isNaN(Date.parse(date))) {
+      throw new AppError("Invalid date format", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -301,18 +283,14 @@ const addItinerary = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or access denied" });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     // Check if itinerary for the date already exists
     const existingDay = trip.itinerary.find((item) => item.date === date);
 
     if (existingDay) {
-      return res.status(400).json({
-        message: "Itinerary for this date already exists",
-      });
+      throw new AppError("Itinerary for this date already exists", 400);
     }
 
     // Create a new itinerary day with empty activities
@@ -324,13 +302,13 @@ const addItinerary = async (req, res, next) => {
     await trip.save();
 
     res.status(201).json({
-      status: "success",
+      success: true,
       message: "New itinerary day created",
       itinerary: trip.itinerary,
     });
   } catch (error) {
     console.error("Add Itinerary Error:", error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 

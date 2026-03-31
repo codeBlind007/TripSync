@@ -71,3 +71,4 @@ export const createTripValidation = (req, res, next) => {
 
   next();
 };
+
