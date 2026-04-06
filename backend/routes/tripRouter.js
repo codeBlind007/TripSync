@@ -3,7 +3,7 @@ import authController from "../controllers/authController.js";
 import upload from "../utils/multer.js";
 import tripController from "../controllers/tripController.js";
 import tripRoomController from "../controllers/tripRoomController.js";
-import { createTripValidation } from "../middlewares/tripValidation.js";
+import { createTripValidation, addItineraryActivitiesValidation } from "../middlewares/tripValidation.js";
 import { validateInvitationRequest, getRecievedInvitation, getSentInvitation, acceptReceivedInvitation } from "../controllers/invitationController.js";
 const router = express.Router();
 
@@ -32,7 +32,7 @@ router
 
 router
   .route("/trips/:tripId/itinerary/:itineraryId")
-  .post(authController.protect, tripController.addItineraryActivity)
+  .post(authController.protect, addItineraryActivitiesValidation, tripController.addItineraryActivity)
   .put(authController.protect, tripController.editItinerary)
   .delete(authController.protect, tripController.deleteItinerary);
 

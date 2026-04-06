@@ -276,6 +276,9 @@ const addItinerary = async (req, res, next) => {
     }else if(isNaN(Date.parse(date))) {
       throw new AppError("Invalid date format", 400);
     }
+    if(!tripId){
+      throw new AppError("Trip ID is required", 400);
+    }
 
     const trip = await TripModel.findOne({
       _id: tripId,
@@ -284,6 +287,13 @@ const addItinerary = async (req, res, next) => {
 
     if (!trip) {
       throw new AppError("Trip not found or access denied", 404);
+    }
+
+    const startDate = trip.startDate;
+    const endDate = trip.endDate;
+
+    if (new Date(date) < new Date(startDate) || new Date(date) > new Date(endDate)) {
+      throw new AppError("Itinerary date must be within trip start and end dates", 400);
     }
 
     // Check if itinerary for the date already exists
@@ -319,9 +329,7 @@ const editItinerary = async (req, res, next) => {
     const { date, activities } = req.body;
 
     if (!tripId || !itineraryId) {
-      return res.status(400).json({
-        message: "Trip ID and itinerary ID are required",
-      });
+      throw new AppError("Trip ID and Itinerary ID are required", 400);
     }
 
     if (activities && !Array.isArray(activities)) {
@@ -369,15 +377,13 @@ const editItinerary = async (req, res, next) => {
   }
 };
 
-const deleteItinerary = async (req, res) => {
+const deleteItinerary = async (req, res, next) => {
   try {
     const { tripId, itineraryId } = req.params;
     const { userId } = req.user;
 
     if (!tripId || !itineraryId) {
-      return res.status(400).json({
-        message: "tripId or itineraryId required",
-      });
+      throw new AppError("Trip ID and Itinerary ID are required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -386,9 +392,7 @@ const deleteItinerary = async (req, res) => {
     });
 
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found!",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     const result = await TripModel.updateOne(
@@ -404,19 +408,16 @@ const deleteItinerary = async (req, res) => {
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({
-        message: "Itinerary day not found",
-      });
+      throw new AppError("Itinerary not found", 404);
     }
 
     return res.status(200).json({
+      success: true,
       message: "Itinerary day deleted successfully",
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    next(error);
   }
 };
 
@@ -428,9 +429,7 @@ const getItineraryActivity = async (req, res, next) => {
 
     // Validate params
     if (!tripId || !itineraryId || !activityId) {
-      return res.status(400).json({
-        message: "Trip ID, itinerary ID, and activity ID are required",
-      });
+      throw new AppError("Trip ID, Itinerary ID, and Activity ID are required", 400);
     }
 
     // Find the trip for this user or collaborator
@@ -440,9 +439,7 @@ const getItineraryActivity = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or access denied" });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     // Find the itinerary
@@ -451,7 +448,7 @@ const getItineraryActivity = async (req, res, next) => {
       (i) => i._id.toString() === itineraryId
     );
     if (!itinerary) {
-      return res.status(404).json({ message: "Itinerary not found" });
+      throw new AppError("Itinerary not found", 404);
     }
     // Find the activity
 
@@ -459,17 +456,18 @@ const getItineraryActivity = async (req, res, next) => {
       (a) => String(a.activityId).trim() === String(activityId).trim()
     );
     if (!activity) {
-      return res.status(404).json({ message: "Activity not found" });
+     throw new AppError("Activity not found", 404);
     }
 
     // Return the activity
     return res.status(200).json({
+      success: true,
       message: "Activity fetched successfully",
       activity,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
 };
 
@@ -477,26 +475,17 @@ const addItineraryActivity = async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { tripId, itineraryId } = req.params;
-    const { time, title, location, notes } = req.body;
+    const { time, title, location, notes } = req.validatedData;
     console.log(tripId, itineraryId, userId);
     // Validate inputs
     if (!tripId || !itineraryId) {
-      return res
-        .status(400)
-        .json({ message: "Trip ID and itinerary ID are required" });
+      throw new AppError("Trip ID and Itinerary ID are required", 400);
     }
-    if (!time || !title) {
-      return res
-        .status(400)
-        .json({ message: "Time and title are required for an activity" });
-    }
-
-    // Find the trip and ensure the user owns it
-    const trip = await TripModel.findOne({ _id: tripId, owner: userId });
+    
+    // Find the trip and ensure the user or collaborator has access
+    const trip = await TripModel.findOne({ _id: tripId, $or: [{ owner: userId }, { collaborators: userId }] });
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or access denied" });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     // Find the itinerary within the trip
@@ -504,7 +493,7 @@ const addItineraryActivity = async (req, res, next) => {
       (i) => i._id.toString() === itineraryId
     );
     if (!itinerary) {
-      return res.status(404).json({ message: "Itinerary not found" });
+      throw new AppError("Itinerary not found", 404);
     }
 
     // Create new activity object
@@ -522,12 +511,13 @@ const addItineraryActivity = async (req, res, next) => {
     await trip.save();
 
     return res.status(201).json({
+      success: true,
       message: "Activity added successfully",
       activity: newActivity,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
 };
 

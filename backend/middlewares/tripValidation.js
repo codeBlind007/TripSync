@@ -72,3 +72,46 @@ export const createTripValidation = (req, res, next) => {
   next();
 };
 
+
+export const addItineraryActivitiesValidation = (req, res, next) => {
+  const schema = Joi.object({
+    time: Joi.string().required().messages({
+      "string.base": "Time must be a string",
+      "string.empty": "Time is required"}),
+    
+    title: Joi.string().required().min(3).max(20).messages({
+      "string.base": "Title must be a string",
+      "string.min": "Title must be at least 3 characters long",
+      "string.max": "Title must not be more than 20 characters",
+      "string.empty": "Title is required"}),
+
+    location: Joi.string().required().min(2).max(30).messages({
+      "string.base": "Location must be a string",
+      "string.min": "Location must be at least 2 characters long",
+      "string.max": "Location must not be more than 30 characters",
+      "string.empty": "Location is required"}),
+    
+    notes: Joi.string().required().messages({
+      "string.base": "Notes must be a string",
+      "string.empty": "Notes is required",
+    }),
+  });
+
+  const { error, value } = schema.validate(req.body, {
+    abortEarly: true,
+    stripUnknown: true,
+  }); 
+
+  if(error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  value.title = value.title.trim();
+  value.title = value.title[0].toUpperCase() + value.title.slice(1);
+  value.location = value.location.trim();
+  value.location = value.location[0].toUpperCase() + value.location.slice(1);
+  value.notes = value.notes.trim();
+  console.log(value);
+  req.validatedData = value;
+  next();
+}
