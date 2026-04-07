@@ -3,7 +3,7 @@ import authController from "../controllers/authController.js";
 import upload from "../utils/multer.js";
 import tripController from "../controllers/tripController.js";
 import tripRoomController from "../controllers/tripRoomController.js";
-import { createTripValidation, addItineraryActivitiesValidation } from "../middlewares/tripValidation.js";
+import { createTripValidation, addItineraryActivitiesValidation, addTaskValidation, addExpensesValidation } from "../middlewares/tripValidation.js";
 import { validateInvitationRequest, getRecievedInvitation, getSentInvitation, acceptReceivedInvitation } from "../controllers/invitationController.js";
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router
 router
   .route("/trips/:tripId/tasks")
   .get(authController.protect, tripController.getTripTasks)
-  .post(authController.protect, tripController.addTask);
+  .post(authController.protect, addTaskValidation, tripController.addTask);
 
 router
   .route("/trips/:tripId/tasks/:taskId")
@@ -55,7 +55,7 @@ router
 router
   .route("/trips/:tripId/expenses")
   .get(authController.protect, tripController.getTripExpenses)
-  .post(authController.protect, tripController.addExpenses);
+  .post(authController.protect, addExpensesValidation, tripController.addExpenses);
 
 router
   .route("/trips/:tripId/expenses/:expenseId")

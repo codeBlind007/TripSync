@@ -528,9 +528,7 @@ const editItineraryActivity = async (req, res, next) => {
     const { time, title, location, notes } = req.body;
 
     if (!tripId || !itineraryId || !activityId) {
-      return res.status(400).json({
-        message: "Trip ID, itinerary ID, and activity ID are required",
-      });
+      throw new AppError("Trip ID, Itinerary ID, and Activity ID are required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -539,17 +537,13 @@ const editItineraryActivity = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found or access denied",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     // Find the specific itinerary day
     const itinerary = trip.itinerary.id(itineraryId);
     if (!itinerary) {
-      return res.status(404).json({
-        message: "Itinerary day not found",
-      });
+      throw new AppError("Itinerary day not found", 404);
     }
 
     // Find the specific activity by its _id
@@ -557,12 +551,9 @@ const editItineraryActivity = async (req, res, next) => {
       (a) => String(a.activityId).trim() === String(activityId).trim()
     );
     if (!activity) {
-      return res.status(404).json({
-        message: "Activity not found",
-      });
+      throw new AppError("Activity not found", 404);
     }
 
-    // Update the activity fields if provided
     if (time !== undefined) activity.time = time;
     if (title !== undefined) activity.title = title;
     if (location !== undefined) activity.location = location;
@@ -571,15 +562,13 @@ const editItineraryActivity = async (req, res, next) => {
     await trip.save();
 
     return res.status(200).json({
+      success: true,
       message: "Activity updated successfully",
       updatedActivity: activity,
     });
   } catch (error) {
     console.error("Edit Activity Error:", error);
-    return res.status(500).json({
-      message: "Something went wrong",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
@@ -589,9 +578,7 @@ const deleteItineraryActivity = async (req, res, next) => {
     const { userId } = req.user;
 
     if (!tripId || !itineraryId || !activityId) {
-      return res.status(400).json({
-        message: "Trip ID, itinerary ID, and activity ID are required",
-      });
+      throw new AppError("Trip ID, Itinerary ID, and Activity ID are required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -600,26 +587,20 @@ const deleteItineraryActivity = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found or access denied",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     // Find the specific itinerary day
     const itinerary = trip.itinerary.id(itineraryId);
     if (!itinerary) {
-      return res.status(404).json({
-        message: "Itinerary day not found",
-      });
+      throw new AppError("Itinerary day not found", 404);
     }
 
     const activity = itinerary.activities.find(
       (a) => String(a.activityId).trim() === String(activityId).trim()
     );
     if (!activity) {
-      return res.status(404).json({
-        message: "Activity not found",
-      });
+      throw new AppError("Activity not found", 404);
     }
 
     activity.deleteOne();
@@ -627,15 +608,13 @@ const deleteItineraryActivity = async (req, res, next) => {
     await trip.save();
 
     return res.status(200).json({
+      success: true,
       message: "Activity deleted successfully",
       itinerary,
     });
   } catch (error) {
     console.error("Error deleting itinerary activity:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
@@ -645,9 +624,7 @@ const getTripTasks = async (req, res, next) => {
     const { userId } = req.user;
 
     if (!tripId) {
-      return res.status(400).json({
-        message: "Trip ID is required",
-      });
+      throw new AppError("Trip ID is required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -656,29 +633,24 @@ const getTripTasks = async (req, res, next) => {
     }).populate('tasks.assignedTo', 'name');
 
     if (!trip) {
-      return res.status(400).json({
-        message: "Trip not found or denied access.",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     if (trip.tasks.length > 0) {
       res.status(200).json({
-        status: "success",
+        success: true,
         results: trip.tasks.length,
         data: trip.tasks,
       });
     } else {
       res.status(200).json({
-        status: "success",
-        message: "No tasks added for this trip.",
-      });
+        success: true,  
+        message: "No tasks found for this trip",
+      })
     }
   } catch (error) {
     console.error("Getting Task Error:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -686,13 +658,8 @@ const addTask = async (req, res, next) => {
   try {
     const { tripId } = req.params;
     const { userId } = req.user;
-    const { text, assignedTo, completed } = req.body;
+    const { text, assignedTo, completed } = req.validatedData;
 
-    if (!tripId || !assignedTo || typeof completed !== "boolean") {
-      return res.status(400).json({
-        message: "Trip ID, assignedTo, and completed (boolean) are required",
-      });
-    }
 
     const trip = await TripModel.findOne({
       _id: tripId,
@@ -700,9 +667,7 @@ const addTask = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found or you don't have access",
-      });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     const newTask = {
@@ -716,16 +681,13 @@ const addTask = async (req, res, next) => {
     await trip.save();
 
     res.status(201).json({
-      status: "success",
+      success: true,
       message: "Task added",
       task: newTask,
     });
   } catch (error) {
     console.error("Adding Task Error:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    next(error);
   }
 };
 
@@ -741,14 +703,12 @@ const editTask = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or access denied" });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     const task = trip.tasks.find((t) => t.taskId === taskId);
     if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+      throw new AppError("Task not found", 404);
     }
 
     // Update allowed fields
@@ -759,13 +719,13 @@ const editTask = async (req, res, next) => {
     await trip.save();
 
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "Task updated",
       task,
     });
   } catch (error) {
     console.error("Edit Task Error:", error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
@@ -773,6 +733,9 @@ const deleteTask = async (req, res, next) => {
   try {
     const { tripId, taskId } = req.params;
     const { userId } = req.user;
+    if(!tripId || !taskId) {
+      throw new AppError("Trip ID and Task ID are required", 400);
+    }
 
     const trip = await TripModel.findOne({
       _id: tripId,
@@ -780,27 +743,25 @@ const deleteTask = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or access denied" });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     const initialLength = trip.tasks.length;
     trip.tasks = trip.tasks.filter((t) => t.taskId !== taskId);
 
     if (trip.tasks.length === initialLength) {
-      return res.status(404).json({ message: "Task not found" });
+      throw new AppError("Task not found", 404);
     }
 
     await trip.save();
 
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "Task deleted",
     });
   } catch (error) {
     console.error("Delete Task Error:", error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
@@ -810,7 +771,7 @@ const getTripExpenses = async (req, res, next) => {
     const { userId } = req.user;
 
     if (!tripId) {
-      return res.status(400).json({ message: "Trip ID is required" });
+      throw new AppError("Trip ID is required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -830,26 +791,24 @@ const getTripExpenses = async (req, res, next) => {
     ]);
 
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or denied access." });
+      throw new AppError("Trip not found or access denied", 404);
     }
 
     if (trip.expenses.length > 0) {
       return res.status(200).json({
-        status: "success",
+        sucess: true,
         results: trip.expenses.length,
         data: trip.expenses,
       });
     } else {
       return res.status(200).json({
-        status: "success",
+        sucess: true,
         message: "No expenses added for this trip.",
       });
     }
   } catch (error) {
     console.error("Get Expense Error:", error.message);
-    return res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
@@ -857,31 +816,10 @@ const addExpenses = async (req, res, next) => {
   try {
     const { tripId } = req.params;
     const { userId } = req.user;
-    const { amount, category, spentBy, sharedWith, note, date } = req.body;
+    const { amount, category, spentBy, sharedWith, note, date } = req.validatedData;
+
     if (!tripId) {
-      return res.status(400).json({
-        message: "Trip ID is required.",
-      });
-    }
-
-    if (
-      typeof amount !== "number" ||
-      !category ||
-      !spentBy ||
-      !note ||
-      !date ||
-      !sharedWith
-    ) {
-      return res.status(400).json({
-        message:
-          "All fields (amount, category, spentBy, note, date, sharedWith) are required.",
-      });
-    }
-
-    if (!Array.isArray(sharedWith)) {
-      return res.status(400).json({
-        message: "sharedWith must be a non-empty array of user IDs.",
-      });
+      throw new AppError("Trip ID is required", 400);
     }
 
     const trip = await TripModel.findOne({
@@ -890,9 +828,14 @@ const addExpenses = async (req, res, next) => {
     });
 
     if (!trip) {
-      return res
-        .status(404)
-        .json({ message: "Trip not found or access denied" });
+      throw new AppError("Trip not found or access denied", 404);
+    }
+
+    const startDate = trip.startDate;
+    const endDate = trip.endDate;
+
+    if (new Date(date) < new Date(startDate) || new Date(date) > new Date(endDate)) {
+      throw new AppError("Expense date must be within trip start and end dates", 400);
     }
 
     const newExpense = {
@@ -908,12 +851,13 @@ const addExpenses = async (req, res, next) => {
     await trip.save();
 
     res.status(200).json({
-      status: "success",
+      success: true,
+      message: "Expense added successfully.",
       data: newExpense,
     });
   } catch (error) {
     console.error("Add Expense Error:", error.message);
-    res.status(500).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
@@ -924,25 +868,25 @@ const editExpenses = async (req, res, next) => {
     const { amount, category, spentBy, sharedWith, note, date } = req.body;
 
     if (!tripId || !expenseId) {
-      return res.status(400).json({
-        message: "TripId or expenseId is required.",
-      });
+      throw new AppError("Trip ID and Expense ID are required", 400);
     }
 
     const trip = await TripModel.findOne({ _id: tripId, owner: userId });
 
     if (!trip) {
-      return res.status(403).json({
-        message: "Trip not found or access denied.",
-      });
+      throw new AppError("Trip not found or access denied", 404);
+    }
+
+    const startDate = trip.startDate;
+    const endDate = trip.endDate; 
+    if (date && (new Date(date) < new Date(startDate) || new Date(date) > new Date(endDate))) {
+      throw new AppError("Expense date must be within trip start and end dates", 400);
     }
 
     const expense = trip.expenses.find((e) => e._id.toString() === expenseId);
 
     if (!expense) {
-      return res.status(404).json({
-        message: "Expense not found.",
-      });
+      throw new AppError("Expense not found", 404);
     }
 
     // Update fields if provided
@@ -956,15 +900,13 @@ const editExpenses = async (req, res, next) => {
     await trip.save();
 
     return res.status(200).json({
+      success: true,
       message: "Expense updated successfully.",
       updatedExpense: expense,
     });
   } catch (error) {
     console.error("Edit expense error:", error);
-    return res.status(500).json({
-      message: "Something went wrong.",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
@@ -975,18 +917,16 @@ const inviteCollaborator = async (req, res) => {
     const { email } = req.body;
 
     if (!tripId || !email) {
-      return res.status(400).json({ message: "TripId and email are required." });
+      throw new AppError("Trip ID and email are required", 400);
     }
 
     const trip = await TripModel.findById(tripId);
     if (!trip) {
-      return res.status(404).json({ message: "Trip not found." });
+      throw new AppError("Trip not found", 404);
     }
 
     if (trip.owner.toString() !== userId.toString()) {
-      return res.status(403).json({
-        message: "Only the trip owner can invite collaborators."
-      });
+      throw new AppError("Only the trip owner can invite collaborators", 403);
     }
 
     const user = await User.findOne({ email });
@@ -999,9 +939,7 @@ const inviteCollaborator = async (req, res) => {
       );
 
       if (isAlreadyCollaborator) {
-        return res.status(409).json({
-          message: "User is already a collaborator."
-        });
+        throw new AppError("User is already a collaborator", 400);
       }
     }
 
@@ -1012,9 +950,7 @@ const inviteCollaborator = async (req, res) => {
     });
 
     if (existingInvite) {
-      return res.status(409).json({
-        message: "User has already been invited."
-      });
+      throw new AppError("An invitation has already been sent to this email for this trip", 400);
     }
 
     // Generate secure token
@@ -1040,6 +976,7 @@ const inviteCollaborator = async (req, res) => {
     }).catch(console.error);
 
     return res.status(200).json({
+      success: true,
       message: "Invitation sent successfully.",
       isUserAccExist,
       invitation,
@@ -1047,10 +984,7 @@ const inviteCollaborator = async (req, res) => {
 
   } catch (error) {
     console.error("inviteCollaborator error:", error);
-    return res.status(500).json({
-      message: "Something went wrong.",
-      error: error.message
-    });
+    next(error);
   }
 };
 
@@ -1063,22 +997,21 @@ const acceptInvitation = async (inviteToken) => {
   });
   console.log(invitation);
   if (!invitation) {
-    throw new Error("Invalid or already used invitation");
+    throw new AppError("Invalid or expired invitation token", 400);
   }
 
   if (invitation.expiresAt < new Date()) {
-    throw new Error("Invitation expired");
-    
+    throw new AppError("Invitation token has expired", 400);
   }
 
   const user = await User.findOne({ email: invitation.email });
   if (!user) {
-    throw new Error("User account not found");
+    throw new AppError("User account not found", 404);
   }
 
   const trip = await TripModel.findById(invitation.tripId);
   if (!trip) {
-    throw new Error("Trip not found");
+    throw new AppError("Trip not found", 404);
   }
 
   const alreadyCollaborator = trip.collaborators.some(
@@ -1086,7 +1019,7 @@ const acceptInvitation = async (inviteToken) => {
   );
 
   if (alreadyCollaborator) {
-    throw new Error("User already a collaborator");
+    throw new AppError("User already a collaborator", 400);
   }
 
   trip.collaborators.push(user._id);
