@@ -122,6 +122,9 @@ const getTripCollaborators = async (req, res, next) => {
       throw new AppError("Trip ID is required", 400);
     }
 
+    if (!mongoose.Types.ObjectId.isValid(tripId)) {
+      throw new AppError("Invalid Trip ID", 400);
+    }
     // Find the trip and verify access
     const trip = await TripModel.findOne({
       _id: tripId,

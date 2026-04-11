@@ -148,19 +148,38 @@ export async function getUserCompletedTrips() {
 }
 
 export async function getRoomCollab(tripId: string) {
-  const cookieStore = await cookies();
-  const res = await fetch(
-    buildApiUrl(`/api/trips/tripRooms/${tripId}/collaborators`),
-    {
-      headers: {
-        Cookie: cookieStore.toString(),
+  try {
+    const cookieStore = await cookies();
+    const res = await fetch(
+      buildApiUrl(`/api/trips/tripRooms/${tripId}/collaborators`),
+      {
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+        next: { tags: ["messages"] },
       },
-      next: { tags: ["messages"] },
-    },
-  );
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.collaborators;
+    );
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Invalid server response while fetching collaborators");
+    }
+
+    if (!res.ok){
+      throw new Error(data.message || "Failed to fetch collaborators");
+    }
+  
+    return data.collaborators; 
+  } catch (error) {
+    if(error instanceof TypeError) {
+      throw new Error("Network error");
+    }
+
+    throw error;
+  }
+   
 }
 
 export async function getReceivedInvitations() {
@@ -169,9 +188,13 @@ export async function getReceivedInvitations() {
     headers: {
       Cookie: cookieStore.toString(),
     },
+    method: "GET",
   });
-  if (!res.ok) return null;
+
   const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch received invitations");
+  }
   return data.invitation;
 }
 
@@ -205,12 +228,10 @@ export async function inviteCollaborator(tripId: string, email: string) {
       }),
     });
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message || "Invite failed");
-    }
-
     const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to send invitation");
+    }
     return data;
   } catch (err) {
     throw err;
