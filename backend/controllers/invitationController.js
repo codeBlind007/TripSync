@@ -5,7 +5,7 @@ import InvitationModel from "../models/Invitation.js";
 import User from "../models/User.js";
 import TripModel from "../models/Trips.js";
 import { inviteEmailTemplate } from "../utils/inviteEmailTemplate.js";
-import path from "path";
+import AppError from "../utils/AppError.js";
 
 export const sendInvitationEmail = async ({
   email,
@@ -19,7 +19,6 @@ export const sendInvitationEmail = async ({
     ? process.env.DEPLOYED_FRONTEND_URL
     : process.env.FRONTEND_URL;
   const inviteLink = `${appUrl}/invite/accept?token=${token}`;
-
 
   const html = inviteEmailTemplate({
     appLink: process.env.appUrl,
@@ -37,15 +36,12 @@ export const sendInvitationEmail = async ({
   });
 };
 
-export const validateInvitationRequest = async (req, res) => {
+export const validateInvitationRequest = async (req, res, next) => {
   try {
     const { token } = req.query;
 
     if (!token) {
-      return res.status(400).json({
-        valid: false,
-        reason: "Token is required",
-      });
+      throw new AppError("Invitation token is required", 400);
     }
 
     const invitation = await InvitationModel.findOne({
@@ -54,22 +50,17 @@ export const validateInvitationRequest = async (req, res) => {
     });
 
     if (!invitation) {
-      return res.status(404).json({
-        valid: false,
-        reason: "Invalid or already used invitation",
-      });
+      throw new AppError("Invalid or already used invitation token", 400);
     }
 
     if (invitation.expiresAt < new Date()) {
-      return res.status(410).json({
-        valid: false,
-        reason: "Invitation expired",
-      });
+      throw new AppError("Invitation token has expired", 400);
     }
 
     const user = await User.findOne({ email: invitation.email });
     console.log(!!req.user);
     return res.status(200).json({
+      success: true,
       valid: true,
       email: invitation.email,
       accountExists: !!user,
@@ -78,21 +69,16 @@ export const validateInvitationRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("validateInvitationRequest error:", error);
-    return res.status(500).json({
-      valid: false,
-      message: "Error validating invitation",
-    });
+    next(error);
   }
 };
 
-export const getRecievedInvitation = async (req, res) => {
+export const getRecievedInvitation = async (req, res, next) => {
   try {
     const { userId } = req.user;
-    console.log(userId);
+
     if (!userId) {
-      return res.status("404").json({
-        message: "user is not logged in!",
-      });
+      throw new AppError("User is not authenticated", 401);
     }
 
     const user = await User.findOne({ _id: userId });
@@ -105,38 +91,26 @@ export const getRecievedInvitation = async (req, res) => {
       select: "name email",
     });
 
-    if (invitation.length === 0) {
-      return res.status(200).json({
-        message: "No pending invitations found",
-      });
-    }
-
     return res.status(200).json({
+      success: true,
       invitation,
     });
   } catch (error) {
     console.error("getRecievedInvitation error:", error);
-    return res.status(500).json({
-      valid: false,
-      message: "Error validating invitation",
-    });
+    next(error);
   }
 };
 
-export const getSentInvitation = async (req, res) => {
+export const getSentInvitation = async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { tripId } = req.params;
-    console.log(userId);
+   
     if (!userId) {
-      return res.status(401).json({
-        message: "user is not logged in!",
-      });
+      throw new AppError("User is not authenticated", 401);
     }
     if (!tripId) {
-      return res.status(400).json({
-        message: "TripId is required",
-      });
+      throw new AppError("tripId is required", 400);
     }
 
     const invitation = await InvitationModel.find({
@@ -154,71 +128,53 @@ export const getSentInvitation = async (req, res) => {
     }
 
     return res.status(200).json({
+      success: true,
       invitation,
     });
   } catch (error) {
     console.error("getSentInvitation error:", error);
-    return res.status(500).json({
-      valid: false,
-      message: "Error validating invitation",
-    });
+    next(error);
   }
 };
 
-export const acceptReceivedInvitation = async (req, res) => {
+export const acceptReceivedInvitation = async (req, res, next) => {
   try {
     const { tripId, invitationId } = req.params;
     const { userId } = req.user;
 
     if (!userId) {
-      return res.status(401).json({
-        message: "User is not authenticated",
-      });
+      throw new AppError("User is not authenticated", 401);
     }
 
     if (!tripId || !invitationId) {
-      return res.status(400).json({
-        message: "tripId and invitationId are required",
-      });
+      throw new AppError("tripId and invitationId are required", 400);
     }
 
     const invitation = await InvitationModel.findById(invitationId);
     if (!invitation) {
-      return res.status(404).json({
-        message: "No invitation found with given invitationId",
-      });
+      throw new AppError("No invitation found with given invitationId", 404);
     }
 
     if (invitation.tripId.toString() !== tripId) {
-      return res.status(400).json({
-        message: "Invitation does not belong to this trip",
-      });
+      throw new AppError("Invitation does not belong to this trip", 400);
     }
 
     if (invitation.status !== "PENDING") {
-      return res.status(400).json({
-        message: `Invitation already ${invitation.status.toLowerCase()}`,
-      });
+      throw new AppError(`Invitation already ${invitation.status.toLowerCase()}`, 400);
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404);
     }
 
     if (invitation.email !== user.email) {
-      return res.status(403).json({
-        message: "This invitation is not meant for you",
-      });
+      throw new AppError("This invitation is not meant for you", 403);
     }
 
     const trip = await TripModel.findById(tripId);
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found",
-      });
+      throw new AppError("Trip not found", 404);
     }
 
     const alreadyCollaborator = trip.collaborators.some(
@@ -228,83 +184,69 @@ export const acceptReceivedInvitation = async (req, res) => {
     if (!alreadyCollaborator) {
       trip.collaborators.push(userId);
       await trip.save();
+    }else{
+      throw new AppError("You are already a collaborator of this trip", 400);
     }
 
     invitation.status = "ACCEPTED";
     await invitation.save();
 
     return res.status(200).json({
+      success: true,
       message: "Invitation accepted successfully",
       tripId,
     });
   } catch (error) {
     console.error("acceptReceivedInvitation error:", error);
-    return res.status(500).json({
-      message: "Failed to accept invitation",
-    });
+    next(error);
   }
 };
 
-export const rejectReceivedInvitation = async (req, res) => {
+export const rejectReceivedInvitation = async (req, res, next) => {
   try {
     const { tripId, invitationId } = req.params;
     const { userId } = req.user;
 
     if (!userId) {
-      return res.status(401).json({
-        message: "User is not authenticated",
-      });
+      throw new AppError("User is not authenticated", 401);
     }
 
     if (!tripId || !invitationId) {
-      return res.status(400).json({
-        message: "tripId and invitationId are required",
-      });
+      throw new AppError("tripId and invitationId are required", 400);
     }
 
     const invitation = await InvitationModel.findById(invitationId);
     if (!invitation) {
-      return res.status(404).json({
-        message: "No invitation found with given invitationId",
-      });
+      throw new AppError("No invitation found with given invitationId", 404);
     }
 
     if (invitation.tripId.toString() !== tripId) {
-      return res.status(400).json({
-        message: "Invitation does not belong to this trip",
-      });
+      throw new AppError("Invitation does not belong to this trip", 400);
     }
 
     if (invitation.status !== "PENDING") {
-      return res.status(400).json({
-        message: `Invitation already ${invitation.status.toLowerCase()}`,
-      });
+      throw new AppError(`Invitation already ${invitation.status.toLowerCase()}`, 400);
     }
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404);
     }
 
     if (invitation.email !== user.email) {
-      return res.status(403).json({
-        message: "This invitation is not meant for you",
-      });
+      throw new AppError("This invitation is not meant for you", 403);
     }
 
     invitation.status = "REJECTED";
     await invitation.save();
 
     return res.status(200).json({
+      success: true,
       message: "Invitation rejected successfully",
       tripId,
     });
   } catch (error) {
     console.error("rejectReceivedInvitation error:", error);
-    return res.status(500).json({
-      message: "Failed to reject invitation",
-    });
+    next(error);
   }
 };

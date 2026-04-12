@@ -913,7 +913,7 @@ const editExpenses = async (req, res, next) => {
   }
 };
 
-const inviteCollaborator = async (req, res) => {
+const inviteCollaborator = async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { tripId } = req.params;

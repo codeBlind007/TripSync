@@ -15,17 +15,17 @@ import { inviteCollaborator } from "@/lib/api";
 import { PendingInvitation } from "./CollaboratorsClient";
 import { Dispatch, SetStateAction } from "react";
 
-interface pageProps{
-  tripId: string,
+interface pageProps {
+  tripId: string;
   onSent: Dispatch<SetStateAction<PendingInvitation[]>>;
 }
 
-const SendInvitation = ({tripId, onSent}: pageProps) => {
+const SendInvitation = ({ tripId, onSent }: pageProps) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  
+
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -40,13 +40,18 @@ const SendInvitation = ({tripId, onSent}: pageProps) => {
 
     try {
       const data = await inviteCollaborator(tripId, email);
+      if (!data?.invitation) {
+        throw new Error("Failed to send invitation");
+      }
       const newInvitation = data.invitation;
       setSuccess(true);
       setEmail("");
       setTimeout(() => setSuccess(false), 3000);
-      onSent(pendingInvitations => [...pendingInvitations, newInvitation]);
+      onSent((pendingInvitations) => [...pendingInvitations, newInvitation]);
     } catch (err) {
-      setError("Failed to send invitation. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
       console.log(err);
     } finally {
       setLoading(false);

@@ -65,8 +65,14 @@ const ReceivedPendingInvitations = ({
 
   const visibleInvitations = invitations.filter(inv => !removedIds.has(inv._id));
 
-  if (!invitations || visibleInvitations.length === 0) {
-    return null;
+  if (invitations.length === 0 || visibleInvitations.length === 0) {
+    return(
+      <div className="text-center py-10">
+        <Mail className="mx-auto mb-4 w-10 h-10 text-blue-600" />
+        <h3 className="text-lg font-semibold">No Received Invitations</h3>
+        <p className="text-sm text-muted-foreground mt-2">You have not received any trip invitations yet.</p>
+      </div>
+    )
   }
 
   return (
