@@ -28,7 +28,7 @@ export const createTripValidation = (req, res, next) => {
 
     destination: Joi.array()
       .items(
-        Joi.string().min(3).required().messages({
+        Joi.string().trim().min(3).required().messages({
           "string.base": "Each destination must be a string",
           "string.empty": "Destination cannot be empty",
           "string.min": "Each destination must be at least 3 characters long",
@@ -64,6 +64,7 @@ export const createTripValidation = (req, res, next) => {
 
   value.destination = value.destination.map((dest) => {
     const d = dest.trim();
+    if (!d) return d;
     return d[0].toUpperCase() + d.slice(1);
   });
 
@@ -133,7 +134,7 @@ export const addTaskValidation = (req, res, next) => {
     }),
   });
 
-  const {error, value} = schema.validate(req.body, {
+  const { error, value } = schema.validate(req.body, {
     abortEarly: true,
     stripUnknown: true,
   });
@@ -150,14 +151,14 @@ export const addTaskValidation = (req, res, next) => {
 export const addExpensesValidation = (req, res, next) => {
   const schema = Joi.object({
     amount: Joi.number().positive().required().messages({
-      "number.base": "Amount must be a number", 
+      "number.base": "Amount must be a number",
       "number.positive": "Amount must be a positive number",
       "any.required": "Amount is required",
     }),
     category: Joi.string().required().min(3).max(100).messages({
       "string.base": "category must be a string",
       "string.empty": "category is required",
-      "string.min": "category must be at least 3 characters long", 
+      "string.min": "category must be at least 3 characters long",
       "string.max": "category must not be more than 100 characters",
     }),
     spentBy: Joi.string().required().messages({
@@ -178,9 +179,9 @@ export const addExpensesValidation = (req, res, next) => {
       "date.base": "Date must be a valid date",
       "any.required": "Date is required",
     }),
-  }); 
+  });
 
-  const {error, value} = schema.validate(req.body, {
+  const { error, value } = schema.validate(req.body, {
     abortEarly: true,
     stripUnknown: true,
   });
@@ -193,4 +194,4 @@ export const addExpensesValidation = (req, res, next) => {
   value.note = value.note.trim();
   req.validatedData = value;
   next();
-}
+};

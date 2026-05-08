@@ -1,11 +1,11 @@
-import Redis from "ioredis";
+import { Redis } from "@upstash/redis";
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const redis = new Redis({
-  username: "default",
-  password: "*******",
-  maxRetriesPerRequest: null,
-  socket: {
-    host: "redis-13271.crce263.ap-south-1-1.ec2.cloud.redislabs.com",
-    port: 13271
-  },
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
+
+await redis.set("foo", "bar");
+await redis.get("foo");

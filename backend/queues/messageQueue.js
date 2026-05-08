@@ -1,7 +1,7 @@
 import {Queue} from "bullmq";
-import { redis } from "../utils/redis.js";
+import { connection } from "../utils/bullmqRedis.js";
 
 
-export const messageQueue = new Queue("message-persist", {
-    redis,
-})
+export const messageQueue = new Queue("messageQueue", {
+  connection,
+});

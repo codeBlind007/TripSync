@@ -26,7 +26,7 @@ interface FormData {
   description: string;
   startDate: string;
   endDate: string;
-  destination: string[];
+  destination: string;
 }
 
 interface FormErrors {
@@ -46,13 +46,14 @@ export default function CreateTripPage() {
     description: "",
     startDate: "",
     endDate: "",
-    destination: [""],
+    destination: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const cleanedDestinations = formData.destination
+    .split(",")
     .map((d) => d.trim())
     .filter((d) => d.length > 0);
 
@@ -132,11 +133,11 @@ export default function CreateTripPage() {
         },
         credentials: "include",
         body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
+          title: formData.title.trim(),
+          description: formData.description.trim(),
           startDate: formData.startDate,
           endDate: formData.endDate,
-          destination: formData.destination,
+          destination: cleanedDestinations,
         }),
       });
 
@@ -365,12 +366,9 @@ export default function CreateTripPage() {
                     <Textarea
                       id="destination"
                       placeholder="Enter destinations separated by commas"
-                      value={formData.destination.join(", ")}
+                      value={formData.destination}
                       onChange={(e) =>
-                        handleInputChange(
-                          "destination",
-                          e.target.value.split(","),
-                        )
+                        handleInputChange("destination", e.target.value)
                       }
                       rows={5}
                       className={`text-base resize-none ${
@@ -391,7 +389,7 @@ export default function CreateTripPage() {
                         )}
                       </div>
                       <span className="text-xs text-gray-500">
-                        {formData.destination.join(", ").length}/500
+                        {formData.destination.length}/500
                       </span>
                     </div>
                   </div>

@@ -2,9 +2,22 @@ import Redis from "ioredis";
 import { messageQueue } from "../queues/messageQueue.js";
 import { redis } from "../utils/redis.js";
 
-redis.on("connect", () => {
-  console.log("redis connected");
-});
+const normalizeRedisMessage = (value) => {
+  // Upstash may return already-deserialized objects for list values.
+  if (value && typeof value === "object") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return { raw: value };
+    }
+  }
+
+  return { raw: value };
+};
 
 export const socketController = (io) => {
   io.on("connection", (socket) => {
@@ -18,26 +31,30 @@ export const socketController = (io) => {
     socket.on("message", async (data) => {
       console.log(data);
       const { tripId, sender, text } = data;
-      
+
       io.to(tripId).emit("recieve-msg", {
         text,
         tripId,
-        sender
+        sender,
       });
 
       const redisKey = `trip:${tripId}:messages`;
 
       const payload = JSON.stringify({
         tripId,
-        sender: sender._id,
+        sender: {
+          _id: sender._id,
+          name: sender.name,
+          email: sender.email,
+        },
         text,
-        timeStamp: Date.now(),
+        timestamp: Date.now(),
       });
 
       await redis.rpush(redisKey, payload);
 
       const messages = await redis.lrange(redisKey, 0, -1);
-      const parsed = messages.map((m) => JSON.parse(m));
+      const parsed = messages.map((m) => normalizeRedisMessage(m));
 
       console.log("msg from redis: ", parsed);
 
@@ -52,9 +69,9 @@ export const socketController = (io) => {
         {
           jobId: `trip-${tripId}`,
           removeOnComplete: true,
-        }
+        },
       );
-      
+
       const counts = await messageQueue.getJobCounts();
       console.log(counts);
 

@@ -1,11 +1,32 @@
 import dotenv from "dotenv";
-dotenv.config({ path: "../.env" }); 
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: resolve(__dirname, "../.env") });
 
 import { Worker } from "bullmq";
-import mongoose from "mongoose";
 import Message from "../models/TripRooms.js";
 import { connectDB } from "../utils/db.js";
-import { redis } from "../utils/redis.js";
+import { connection } from "../utils/bullmqRedis.js";
+
+const parseWorkerMessage = (value) => {
+  if (value && typeof value === "object") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
 
 await connectDB();
 
@@ -14,39 +35,49 @@ console.log("worker started");
 new Worker(
   "message-persist",
   async (job) => {
-    const { tripId } = job.data;   
+    const { tripId } = job.data;
 
     console.log("Processing trip:", tripId);
 
     const redisKey = `trip:${tripId}:messages`;
 
-    const lua = `
-      local msgs = redis.call("LRANGE", KEYS[1], 0, -1)
-      redis.call("DEL", KEYS[1])
-      return msgs
-    `;
+    const messages = await connection.lrange(redisKey, 0, -1);
 
-    const messages = await redis.eval(lua, 1, redisKey);
+    await connection.del(redisKey);
 
     if (!messages.length) return;
 
-    const docs = messages.map((m) => {
-      const parsed = JSON.parse(m);
-      console.log(parsed);
-      return {
-        tripId,
-        sender: parsed.sender,
-        text: parsed.text,
-        timeStamp: new Date(parsed.timeStamp),
-      };
-    });
+    const docs = messages
+      .map((m) => {
+        const parsed = parseWorkerMessage(m);
+
+        if (!parsed) {
+          return null;
+        }
+
+        const senderId =
+          typeof parsed.sender === "object"
+            ? parsed.sender?._id
+            : parsed.sender;
+        const timestampValue =
+          parsed.timestamp ?? parsed.timeStamp ?? Date.now();
+
+        console.log(parsed);
+        return {
+          tripId,
+          sender: senderId,
+          text: parsed.text,
+          timestamp: new Date(timestampValue),
+        };
+      })
+      .filter(Boolean);
 
     await Message.insertMany(docs);
   },
   {
-    connection: redis,
+    connection,
     concurrency: 5,
-  }
+  },
 );
 
 console.log("worker done the job");
