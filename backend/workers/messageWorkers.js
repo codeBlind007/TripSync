@@ -33,7 +33,7 @@ await connectDB();
 console.log("worker started");
 
 new Worker(
-  "message-persist",
+  "messageQueue",
   async (job) => {
     const { tripId } = job.data;
 
@@ -72,7 +72,16 @@ new Worker(
       })
       .filter(Boolean);
 
-    await Message.insertMany(docs);
+    try {
+      if (docs.length) {
+        await Message.insertMany(docs);
+        console.log(`Inserted ${docs.length} messages for trip ${tripId}`);
+      } else {
+        console.log(`No docs to insert for trip ${tripId}`);
+      }
+    } catch (err) {
+      console.error("Failed to insert messages:", err, "docs:", docs);
+    }
   },
   {
     connection,
