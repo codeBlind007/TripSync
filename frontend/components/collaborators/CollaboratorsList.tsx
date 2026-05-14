@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@clerk/nextjs";
 import { Users } from "lucide-react";
 import { Collaborators } from "./CollaboratorsClient";
 import { removeCollaborator } from "@/lib/api";
@@ -18,6 +19,8 @@ const CollaboratorsList = ({
   onModifyCollab,
   isCompleted = false,
 }: pageProps) => {
+  const { getToken } = useAuth();
+
   const handleRemoveCollaborator = async (
     e: React.MouseEvent,
     tripId: string,
@@ -26,7 +29,12 @@ const CollaboratorsList = ({
     e.preventDefault();
 
     try {
-      const res = await removeCollaborator(tripId, collaboratorId);
+      const token = await getToken();
+      const res = await removeCollaborator(
+        tripId,
+        collaboratorId,
+        token ?? undefined,
+      );
       if (res.success) {
         onModifyCollab((prev) =>
           prev.filter((collab) => collab._id !== collaboratorId),

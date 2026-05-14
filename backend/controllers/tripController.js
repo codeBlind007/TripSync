@@ -6,15 +6,26 @@ import InvitationModel from "../models/Invitation.js";
 import { sendInvitationEmail } from "./invitationController.js";
 import { randomBytes } from "crypto";
 import AppError from "../utils/AppError.js";
-// get all the stories
+
+// Helper to convert Clerk ID to MongoDB user ID
+const getUserMongoId = async (clerkUserId) => {
+  const user = await User.findOne({ clerkUserId });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user._id;
+};
+
 
 const getAllUserTrips = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
 
-    if(!userId) {
+    if (!clerkUserId) {
       throw new AppError("User ID is required in the request", 400);
     }
+
+    const userId = await getUserMongoId(clerkUserId);
 
     const trips = await TripModel.find({
       $or: [{ owner: userId }, { collaborators: userId }],
@@ -36,12 +47,15 @@ const getAllUserTrips = async (req, res, next) => {
 
 const createTrip = async (req, res, next) => {
   try {
-    const { title, description, startDate, endDate, destination } = req.validatedData;
-    const { userId: ownerId } = req.user || {};
-    
-    if (!ownerId) {
+    const { title, description, startDate, endDate, destination } =
+      req.validatedData;
+    const clerkUserId = req.auth?.userId;
+
+    if (!clerkUserId) {
       throw new AppError("User not authenticated", 401);
     }
+
+    const ownerId = await getUserMongoId(clerkUserId);
 
     const user = await User.findById(ownerId);
     if (!user) {
@@ -66,7 +80,6 @@ const createTrip = async (req, res, next) => {
       success: true,
       data: trip,
     });
-
   } catch (error) {
     console.error("Error creating trip:", error);
     next(error);
@@ -95,7 +108,7 @@ const deleteTrip = async (req, res, next) => {
   try {
     const { tripId } = req.params;
 
-    if(!tripId){
+    if (!tripId) {
       throw new AppError("Trip ID is required", 400);
     }
 
@@ -115,8 +128,9 @@ const deleteTrip = async (req, res, next) => {
 
 const getTripCollaborators = async (req, res, next) => {
   try {
-    const { tripId } = req.params;
-    const { userId } = req.user;
+    const tripId = req.params.tripId;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId) {
       throw new AppError("Trip ID is required", 400);
@@ -142,9 +156,8 @@ const getTripCollaborators = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       results: trip.collaborators.length,
-      collaborators: trip.collaborators, 
+      collaborators: trip.collaborators,
     });
-
   } catch (error) {
     console.error("Error fetching collaborators:", error);
     next(error);
@@ -153,8 +166,9 @@ const getTripCollaborators = async (req, res, next) => {
 
 const addCollaborators = async (req, res, next) => {
   try {
-    const { tripId } = req.params;
-    const { userId } = req.user;
+    const tripId = req.params.tripId;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { collaborators } = req.body;
 
     if (!tripId) {
@@ -198,9 +212,9 @@ const addCollaborators = async (req, res, next) => {
 
 const deleteCollaborators = async (req, res, next) => {
   try {
-
     const { tripId, collaboratorId } = req.params;
-    const { userId: ownerId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const ownerId = await getUserMongoId(clerkUserId);
 
     if (!tripId || !collaboratorId) {
       throw new AppError("TripId and CollboratorsId required", 400);
@@ -236,7 +250,8 @@ const deleteCollaborators = async (req, res, next) => {
 const getTripItinerary = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId) {
       throw new AppError("Trip ID is required", 400);
@@ -251,7 +266,9 @@ const getTripItinerary = async (req, res, next) => {
       throw new AppError("Trip not found or access denied", 404);
     }
 
-    const activeItinerary = trip.itinerary.filter(day => day.is_deleted !== true);
+    const activeItinerary = trip.itinerary.filter(
+      (day) => day.is_deleted !== true,
+    );
 
     if (activeItinerary.length > 0) {
       res.status(200).json({
@@ -271,15 +288,16 @@ const getTripItinerary = async (req, res, next) => {
 const addItinerary = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { date } = req.body;
 
     if (!date) {
       throw new AppError("Date is required to add itinerary", 400);
-    }else if(isNaN(Date.parse(date))) {
+    } else if (isNaN(Date.parse(date))) {
       throw new AppError("Invalid date format", 400);
     }
-    if(!tripId){
+    if (!tripId) {
       throw new AppError("Trip ID is required", 400);
     }
 
@@ -295,8 +313,14 @@ const addItinerary = async (req, res, next) => {
     const startDate = trip.startDate;
     const endDate = trip.endDate;
 
-    if (new Date(date) < new Date(startDate) || new Date(date) > new Date(endDate)) {
-      throw new AppError("Itinerary date must be within trip start and end dates", 400);
+    if (
+      new Date(date) < new Date(startDate) ||
+      new Date(date) > new Date(endDate)
+    ) {
+      throw new AppError(
+        "Itinerary date must be within trip start and end dates",
+        400,
+      );
     }
 
     // Check if itinerary for the date already exists
@@ -328,7 +352,8 @@ const addItinerary = async (req, res, next) => {
 const editItinerary = async (req, res, next) => {
   try {
     const { tripId, itineraryId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { date, activities } = req.body;
 
     if (!tripId || !itineraryId) {
@@ -383,7 +408,8 @@ const editItinerary = async (req, res, next) => {
 const deleteItinerary = async (req, res, next) => {
   try {
     const { tripId, itineraryId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId || !itineraryId) {
       throw new AppError("Trip ID and Itinerary ID are required", 400);
@@ -407,7 +433,7 @@ const deleteItinerary = async (req, res, next) => {
         $set: {
           "itinerary.$.is_deleted": true,
         },
-      }
+      },
     );
 
     if (result.matchedCount === 0) {
@@ -424,15 +450,18 @@ const deleteItinerary = async (req, res, next) => {
   }
 };
 
-
 const getItineraryActivity = async (req, res, next) => {
   try {
     const { tripId, itineraryId, activityId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     // Validate params
     if (!tripId || !itineraryId || !activityId) {
-      throw new AppError("Trip ID, Itinerary ID, and Activity ID are required", 400);
+      throw new AppError(
+        "Trip ID, Itinerary ID, and Activity ID are required",
+        400,
+      );
     }
 
     // Find the trip for this user or collaborator
@@ -448,7 +477,7 @@ const getItineraryActivity = async (req, res, next) => {
     // Find the itinerary
 
     const itinerary = trip.itinerary.find(
-      (i) => i._id.toString() === itineraryId
+      (i) => i._id.toString() === itineraryId,
     );
     if (!itinerary) {
       throw new AppError("Itinerary not found", 404);
@@ -456,10 +485,10 @@ const getItineraryActivity = async (req, res, next) => {
     // Find the activity
 
     const activity = itinerary.activities.find(
-      (a) => String(a.activityId).trim() === String(activityId).trim()
+      (a) => String(a.activityId).trim() === String(activityId).trim(),
     );
     if (!activity) {
-     throw new AppError("Activity not found", 404);
+      throw new AppError("Activity not found", 404);
     }
 
     // Return the activity
@@ -476,7 +505,8 @@ const getItineraryActivity = async (req, res, next) => {
 
 const addItineraryActivity = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { tripId, itineraryId } = req.params;
     const { time, title, location, notes } = req.validatedData;
     console.log(tripId, itineraryId, userId);
@@ -484,16 +514,19 @@ const addItineraryActivity = async (req, res, next) => {
     if (!tripId || !itineraryId) {
       throw new AppError("Trip ID and Itinerary ID are required", 400);
     }
-    
+
     // Find the trip and ensure the user or collaborator has access
-    const trip = await TripModel.findOne({ _id: tripId, $or: [{ owner: userId }, { collaborators: userId }] });
+    const trip = await TripModel.findOne({
+      _id: tripId,
+      $or: [{ owner: userId }, { collaborators: userId }],
+    });
     if (!trip) {
       throw new AppError("Trip not found or access denied", 404);
     }
 
     // Find the itinerary within the trip
     const itinerary = trip.itinerary.find(
-      (i) => i._id.toString() === itineraryId
+      (i) => i._id.toString() === itineraryId,
     );
     if (!itinerary) {
       throw new AppError("Itinerary not found", 404);
@@ -527,11 +560,15 @@ const addItineraryActivity = async (req, res, next) => {
 const editItineraryActivity = async (req, res, next) => {
   try {
     const { tripId, itineraryId, activityId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { time, title, location, notes } = req.body;
 
     if (!tripId || !itineraryId || !activityId) {
-      throw new AppError("Trip ID, Itinerary ID, and Activity ID are required", 400);
+      throw new AppError(
+        "Trip ID, Itinerary ID, and Activity ID are required",
+        400,
+      );
     }
 
     const trip = await TripModel.findOne({
@@ -551,7 +588,7 @@ const editItineraryActivity = async (req, res, next) => {
 
     // Find the specific activity by its _id
     const activity = itinerary.activities.find(
-      (a) => String(a.activityId).trim() === String(activityId).trim()
+      (a) => String(a.activityId).trim() === String(activityId).trim(),
     );
     if (!activity) {
       throw new AppError("Activity not found", 404);
@@ -578,10 +615,14 @@ const editItineraryActivity = async (req, res, next) => {
 const deleteItineraryActivity = async (req, res, next) => {
   try {
     const { tripId, itineraryId, activityId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId || !itineraryId || !activityId) {
-      throw new AppError("Trip ID, Itinerary ID, and Activity ID are required", 400);
+      throw new AppError(
+        "Trip ID, Itinerary ID, and Activity ID are required",
+        400,
+      );
     }
 
     const trip = await TripModel.findOne({
@@ -600,7 +641,7 @@ const deleteItineraryActivity = async (req, res, next) => {
     }
 
     const activity = itinerary.activities.find(
-      (a) => String(a.activityId).trim() === String(activityId).trim()
+      (a) => String(a.activityId).trim() === String(activityId).trim(),
     );
     if (!activity) {
       throw new AppError("Activity not found", 404);
@@ -624,7 +665,8 @@ const deleteItineraryActivity = async (req, res, next) => {
 const getTripTasks = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId) {
       throw new AppError("Trip ID is required", 400);
@@ -633,7 +675,7 @@ const getTripTasks = async (req, res, next) => {
     const trip = await TripModel.findOne({
       _id: tripId,
       $or: [{ owner: userId }, { collaborators: userId }],
-    }).populate('tasks.assignedTo', 'name');
+    }).populate("tasks.assignedTo", "name");
 
     if (!trip) {
       throw new AppError("Trip not found or access denied", 404);
@@ -647,9 +689,9 @@ const getTripTasks = async (req, res, next) => {
       });
     } else {
       res.status(200).json({
-        success: true,  
+        success: true,
         message: "No tasks found for this trip",
-      })
+      });
     }
   } catch (error) {
     console.error("Getting Task Error:", error.message);
@@ -660,9 +702,9 @@ const getTripTasks = async (req, res, next) => {
 const addTask = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { text, assignedTo, completed } = req.validatedData;
-
 
     const trip = await TripModel.findOne({
       _id: tripId,
@@ -697,7 +739,8 @@ const addTask = async (req, res, next) => {
 const editTask = async (req, res, next) => {
   try {
     const { tripId, taskId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { text, assignedTo, completed } = req.body;
 
     const trip = await TripModel.findOne({
@@ -735,8 +778,9 @@ const editTask = async (req, res, next) => {
 const deleteTask = async (req, res, next) => {
   try {
     const { tripId, taskId } = req.params;
-    const { userId } = req.user;
-    if(!tripId || !taskId) {
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
+    if (!tripId || !taskId) {
       throw new AppError("Trip ID and Task ID are required", 400);
     }
 
@@ -771,7 +815,8 @@ const deleteTask = async (req, res, next) => {
 const getTripExpenses = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId) {
       throw new AppError("Trip ID is required", 400);
@@ -818,8 +863,10 @@ const getTripExpenses = async (req, res, next) => {
 const addExpenses = async (req, res, next) => {
   try {
     const { tripId } = req.params;
-    const { userId } = req.user;
-    const { amount, category, spentBy, sharedWith, note, date } = req.validatedData;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
+    const { amount, category, spentBy, sharedWith, note, date } =
+      req.validatedData;
 
     if (!tripId) {
       throw new AppError("Trip ID is required", 400);
@@ -837,8 +884,14 @@ const addExpenses = async (req, res, next) => {
     const startDate = trip.startDate;
     const endDate = trip.endDate;
 
-    if (new Date(date) < new Date(startDate) || new Date(date) > new Date(endDate)) {
-      throw new AppError("Expense date must be within trip start and end dates", 400);
+    if (
+      new Date(date) < new Date(startDate) ||
+      new Date(date) > new Date(endDate)
+    ) {
+      throw new AppError(
+        "Expense date must be within trip start and end dates",
+        400,
+      );
     }
 
     const newExpense = {
@@ -867,7 +920,8 @@ const addExpenses = async (req, res, next) => {
 const editExpenses = async (req, res, next) => {
   try {
     const { tripId, expenseId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { amount, category, spentBy, sharedWith, note, date } = req.body;
 
     if (!tripId || !expenseId) {
@@ -881,9 +935,16 @@ const editExpenses = async (req, res, next) => {
     }
 
     const startDate = trip.startDate;
-    const endDate = trip.endDate; 
-    if (date && (new Date(date) < new Date(startDate) || new Date(date) > new Date(endDate))) {
-      throw new AppError("Expense date must be within trip start and end dates", 400);
+    const endDate = trip.endDate;
+    if (
+      date &&
+      (new Date(date) < new Date(startDate) ||
+        new Date(date) > new Date(endDate))
+    ) {
+      throw new AppError(
+        "Expense date must be within trip start and end dates",
+        400,
+      );
     }
 
     const expense = trip.expenses.find((e) => e._id.toString() === expenseId);
@@ -915,7 +976,8 @@ const editExpenses = async (req, res, next) => {
 
 const inviteCollaborator = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { tripId } = req.params;
     const { email } = req.body;
 
@@ -933,12 +995,12 @@ const inviteCollaborator = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email });
-    const inviter = await User.findOne({_id: userId})
+    const inviter = await User.findOne({ _id: userId });
     const isUserAccExist = !!user;
 
     if (user) {
       const isAlreadyCollaborator = trip.collaborators.some(
-        (c) => c.toString() === user._id.toString()
+        (c) => c.toString() === user._id.toString(),
       );
 
       if (isAlreadyCollaborator) {
@@ -949,11 +1011,14 @@ const inviteCollaborator = async (req, res, next) => {
     const existingInvite = await InvitationModel.findOne({
       tripId,
       email,
-      status: "PENDING"
+      status: "PENDING",
     });
 
     if (existingInvite) {
-      throw new AppError("An invitation has already been sent to this email for this trip", 400);
+      throw new AppError(
+        "An invitation has already been sent to this email for this trip",
+        400,
+      );
     }
 
     // Generate secure token
@@ -966,7 +1031,7 @@ const inviteCollaborator = async (req, res, next) => {
       token,
       status: "PENDING",
       expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48h
-      acceptedAt: null
+      acceptedAt: null,
     });
 
     // Send email (non-blocking)
@@ -975,7 +1040,7 @@ const inviteCollaborator = async (req, res, next) => {
       token,
       tripName: trip.title,
       inviterName: inviter.name,
-      expiresAt: invitation.expiresAt
+      expiresAt: invitation.expiresAt,
     }).catch(console.error);
 
     return res.status(200).json({
@@ -984,7 +1049,6 @@ const inviteCollaborator = async (req, res, next) => {
       isUserAccExist,
       invitation,
     });
-
   } catch (error) {
     console.error("inviteCollaborator error:", error);
     next(error);
@@ -992,11 +1056,10 @@ const inviteCollaborator = async (req, res, next) => {
 };
 
 const acceptInvitation = async (inviteToken) => {
-
   console.log(inviteToken);
   const invitation = await InvitationModel.findOne({
-    token:inviteToken,
-    status: "PENDING"
+    token: inviteToken,
+    status: "PENDING",
   });
   console.log(invitation);
   if (!invitation) {
@@ -1018,7 +1081,7 @@ const acceptInvitation = async (inviteToken) => {
   }
 
   const alreadyCollaborator = trip.collaborators.some(
-    (c) => c.toString() === user._id.toString()
+    (c) => c.toString() === user._id.toString(),
   );
 
   if (alreadyCollaborator) {
@@ -1032,38 +1095,34 @@ const acceptInvitation = async (inviteToken) => {
   invitation.status = "ACCEPTED";
   invitation.acceptedAt = new Date();
   await invitation.save();
-} 
+};
 
-
-const getTripStory = async(req, res, next) => {
+const getTripStory = async (req, res, next) => {
   try {
-    const {userId} = req.user;
-    const {tripId} = req.params;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
+    const { tripId } = req.params;
 
-    if(!tripId){
+    if (!tripId) {
       return res.status(400).json({
-        message: "TripId and storyId required!"
-      })
+        message: "TripId and storyId required!",
+      });
     }
 
     const trip = await TripModel.findOne({
       _id: tripId,
-      $or: [
-        { owner: userId },
-        { collaborators:userId },
-      ],
+      $or: [{ owner: userId }, { collaborators: userId }],
     });
-    if(!trip){
+    if (!trip) {
       return res.status(400).json({
-        message: "Trip not found or access denied"
-      })
+        message: "Trip not found or access denied",
+      });
     }
     console.log(trip.story);
     res.status(200).json({
       status: "success",
-      data: trip.story.visitedLocations
-    })
-
+      data: trip.story.visitedLocations,
+    });
   } catch (error) {
     console.error("Get Story error:", error);
     return res.status(500).json({
@@ -1071,9 +1130,7 @@ const getTripStory = async(req, res, next) => {
       error: error.message,
     });
   }
-}
-
-
+};
 
 const tripController = {
   getAllUserTrips,
@@ -1100,7 +1157,7 @@ const tripController = {
   editExpenses,
   inviteCollaborator,
   getTripStory,
-  acceptInvitation
+  acceptInvitation,
 };
 
 export default tripController;

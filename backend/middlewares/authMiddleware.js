@@ -1,26 +1,18 @@
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import { getAuth } from "@clerk/express";
+import AppError from "../utils/AppError.js";
 
-const authMiddleware = async (req, res, next) => {
-  const token = req.cookies.token; // token stored as httpOnly cookie
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized, no token" });
-  }
-
+const authMiddleware = (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const auth = getAuth(req);
 
-    // Attach user info to request (fetch fresh data from DB)
-    const user = await User.findById(decoded.userId).select("-password");
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
+    if (!auth.userId) {
+      throw new AppError("Unauthorized - Authentication required", 401);
     }
 
-    req.user = user; 
+    req.auth = auth;
     next();
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (error) {
+    next(error);
   }
 };
 

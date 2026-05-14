@@ -1,5 +1,5 @@
 // models/User.js
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -18,34 +18,38 @@ const userSchema = new mongoose.Schema({
 
   password: {
     type: String,
-    required: true,
     minlength: 6,
   },
 
+  clerkUserId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   avatarUrl: {
-    type: String, 
-    default: '',
+    type: String,
+    default: "",
   },
 
   tripsOwned: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'TripModel',
-    }
+      ref: "TripModel",
+    },
   ],
 
   tripsJoined: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'TripModel',
-    }
+      ref: "TripModel",
+    },
   ],
 
   createdAt: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 export default User;

@@ -7,6 +7,15 @@ import TripModel from "../models/Trips.js";
 import { inviteEmailTemplate } from "../utils/inviteEmailTemplate.js";
 import AppError from "../utils/AppError.js";
 
+// Helper to convert Clerk ID to MongoDB user ID
+const getUserMongoId = async (clerkUserId) => {
+  const user = await User.findOne({ clerkUserId });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user._id;
+};
+
 export const sendInvitationEmail = async ({
   email,
   token,
@@ -58,13 +67,13 @@ export const validateInvitationRequest = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: invitation.email });
-    console.log(!!req.user);
+    const isAuthenticated = !!req.auth?.userId;
     return res.status(200).json({
       success: true,
       valid: true,
       email: invitation.email,
       accountExists: !!user,
-      isAuthenticated: !!req.user,
+      isAuthenticated,
       tripId: invitation.tripId,
     });
   } catch (error) {
@@ -75,12 +84,13 @@ export const validateInvitationRequest = async (req, res, next) => {
 
 export const getRecievedInvitation = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
 
-    if (!userId) {
+    if (!clerkUserId) {
       throw new AppError("User is not authenticated", 401);
     }
 
+    const userId = await getUserMongoId(clerkUserId);
     const user = await User.findOne({ _id: userId });
 
     const invitation = await InvitationModel.find({
@@ -103,15 +113,18 @@ export const getRecievedInvitation = async (req, res, next) => {
 
 export const getSentInvitation = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
     const { tripId } = req.params;
-   
-    if (!userId) {
+
+    if (!clerkUserId) {
       throw new AppError("User is not authenticated", 401);
     }
     if (!tripId) {
       throw new AppError("tripId is required", 400);
     }
+
+    // Note: userId not used in this function, just validate auth
+    await getUserMongoId(clerkUserId);
 
     const invitation = await InvitationModel.find({
       tripId: tripId,
@@ -140,11 +153,13 @@ export const getSentInvitation = async (req, res, next) => {
 export const acceptReceivedInvitation = async (req, res, next) => {
   try {
     const { tripId, invitationId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
 
-    if (!userId) {
+    if (!clerkUserId) {
       throw new AppError("User is not authenticated", 401);
     }
+
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId || !invitationId) {
       throw new AppError("tripId and invitationId are required", 400);
@@ -160,7 +175,10 @@ export const acceptReceivedInvitation = async (req, res, next) => {
     }
 
     if (invitation.status !== "PENDING") {
-      throw new AppError(`Invitation already ${invitation.status.toLowerCase()}`, 400);
+      throw new AppError(
+        `Invitation already ${invitation.status.toLowerCase()}`,
+        400,
+      );
     }
 
     const user = await User.findById(userId);
@@ -184,7 +202,7 @@ export const acceptReceivedInvitation = async (req, res, next) => {
     if (!alreadyCollaborator) {
       trip.collaborators.push(userId);
       await trip.save();
-    }else{
+    } else {
       throw new AppError("You are already a collaborator of this trip", 400);
     }
 
@@ -205,11 +223,13 @@ export const acceptReceivedInvitation = async (req, res, next) => {
 export const rejectReceivedInvitation = async (req, res, next) => {
   try {
     const { tripId, invitationId } = req.params;
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
 
-    if (!userId) {
+    if (!clerkUserId) {
       throw new AppError("User is not authenticated", 401);
     }
+
+    const userId = await getUserMongoId(clerkUserId);
 
     if (!tripId || !invitationId) {
       throw new AppError("tripId and invitationId are required", 400);
@@ -225,7 +245,10 @@ export const rejectReceivedInvitation = async (req, res, next) => {
     }
 
     if (invitation.status !== "PENDING") {
-      throw new AppError(`Invitation already ${invitation.status.toLowerCase()}`, 400);
+      throw new AppError(
+        `Invitation already ${invitation.status.toLowerCase()}`,
+        400,
+      );
     }
 
     const user = await User.findById(userId);

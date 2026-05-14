@@ -3,6 +3,24 @@ import { cookies } from "next/headers";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 
+type RequestCookies = Awaited<ReturnType<typeof cookies>>;
+
+function buildAuthHeaders(
+  cookieStore: RequestCookies | null,
+  authToken?: string,
+  extraHeaders: Record<string, string> = {},
+) {
+  const headers: Record<string, string> = { ...extraHeaders };
+
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  } else if (cookieStore) {
+    headers.Cookie = cookieStore.toString();
+  }
+
+  return headers;
+}
+
 function buildApiUrl(path: string) {
   if (!BACKEND_URL) {
     throw new Error("BACKEND_URL is not set");
@@ -11,16 +29,15 @@ function buildApiUrl(path: string) {
   return `${BACKEND_URL}${path}`;
 }
 
-export async function getUserInfo() {
+export async function getUserInfo(authToken?: string) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = authToken ? null : await cookies();
     const res = await fetch(buildApiUrl("/api/user/me"), {
       method: "GET",
       credentials: "include",
-      headers: {
-        Cookie: cookieStore.toString(),
+      headers: buildAuthHeaders(cookieStore, authToken, {
         "Content-Type": "application/json",
-      },
+      }),
       cache: "no-store",
     });
 
@@ -192,10 +209,12 @@ export async function getReceivedInvitations() {
     });
 
     let data;
-    try {      
+    try {
       data = await res.json();
     } catch {
-      throw new Error("Invalid server response while fetching received invitations");
+      throw new Error(
+        "Invalid server response while fetching received invitations",
+      );
     }
 
     if (!res.ok) {
@@ -208,7 +227,6 @@ export async function getReceivedInvitations() {
       throw new Error("Network error while fetching received invitations");
     }
   }
-  
 }
 
 export async function getSentInvitations(tripId: string) {
@@ -230,19 +248,21 @@ export async function getSentInvitations(tripId: string) {
       throw new Error("Network error while fetching sent invitations");
     }
   }
-  
 }
 
-export async function inviteCollaborator(tripId: string, email: string) {
+export async function inviteCollaborator(
+  tripId: string,
+  email: string,
+  authToken?: string,
+) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = authToken ? null : await cookies();
     const res = await fetch(buildApiUrl(`/api/trips/${tripId}/invite`), {
       method: "POST",
       credentials: "include",
-      headers: {
-        Cookie: cookieStore.toString(),
+      headers: buildAuthHeaders(cookieStore, authToken, {
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify({
         email,
       }),
@@ -265,17 +285,20 @@ export async function inviteCollaborator(tripId: string, email: string) {
   }
 }
 
-export async function acceptInvitation(tripId: string, invitationId: string) {
+export async function acceptInvitation(
+  tripId: string,
+  invitationId: string,
+  authToken?: string,
+) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = authToken ? null : await cookies();
     const res = await fetch(
       buildApiUrl(`/api/trips/${tripId}/invitations/${invitationId}`),
       {
         method: "PATCH",
-        headers: {
-          Cookie: cookieStore.toString(),
+        headers: buildAuthHeaders(cookieStore, authToken, {
           "Content-type": "application/json",
-        },
+        }),
       },
     );
 
@@ -311,16 +334,15 @@ export async function getTripTasks(tripId: string) {
 export async function removeCollaborator(
   tripId: string,
   collaboratorId: string,
+  authToken?: string,
 ) {
-  const cookieStore = await cookies();
+  const cookieStore = authToken ? null : await cookies();
   try {
     const res = await fetch(
       buildApiUrl(`/api/trips/${tripId}/collaborators/${collaboratorId}`),
       {
         method: "DELETE",
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
+        headers: buildAuthHeaders(cookieStore, authToken),
       },
     );
 

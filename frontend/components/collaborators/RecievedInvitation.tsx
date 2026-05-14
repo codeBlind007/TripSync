@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { Button } from "../ui/button";
 import { Mail } from "lucide-react";
 import { acceptInvitation } from "@/lib/api";
 interface InvitedBy {
-  name: string,
-  email: string,
-  _id: string
+  name: string;
+  email: string;
+  _id: string;
 }
 
 interface ReceivedInvitation {
@@ -17,13 +18,14 @@ interface ReceivedInvitation {
   createdAt: string;
 }
 
-const ReceivedPendingInvitations = ({ 
-  invitations 
-}: { 
-  invitations: ReceivedInvitation[] 
+const ReceivedPendingInvitations = ({
+  invitations,
+}: {
+  invitations: ReceivedInvitation[];
 }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+  const { getToken } = useAuth();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -33,7 +35,7 @@ const ReceivedPendingInvitations = ({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     return `${diffDays}d ago`;
@@ -42,10 +44,11 @@ const ReceivedPendingInvitations = ({
   const handleAccept = async (tripId: string, invitationId: string) => {
     setLoadingId(invitationId);
     try {
-      await acceptInvitation(tripId, invitationId);
-      setRemovedIds(prev => new Set(prev).add(invitationId));
+      const token = await getToken();
+      await acceptInvitation(tripId, invitationId, token ?? undefined);
+      setRemovedIds((prev) => new Set(prev).add(invitationId));
     } catch (error) {
-      console.error('Failed to accept invitation:', error);
+      console.error("Failed to accept invitation:", error);
     } finally {
       setLoadingId(null);
     }
@@ -54,25 +57,29 @@ const ReceivedPendingInvitations = ({
   const handleDecline = async (tripId: string, invitationId: string) => {
     setLoadingId(invitationId);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setRemovedIds(prev => new Set(prev).add(invitationId));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setRemovedIds((prev) => new Set(prev).add(invitationId));
     } catch (error) {
-      console.error('Failed to decline invitation:', error);
+      console.error("Failed to decline invitation:", error);
     } finally {
       setLoadingId(null);
     }
   };
 
-  const visibleInvitations = invitations.filter(inv => !removedIds.has(inv._id));
+  const visibleInvitations = invitations.filter(
+    (inv) => !removedIds.has(inv._id),
+  );
 
   if (invitations.length === 0 || visibleInvitations.length === 0) {
-    return(
+    return (
       <div className="text-center py-10">
         <Mail className="mx-auto mb-4 w-10 h-10 text-blue-600" />
         <h3 className="text-lg font-semibold">No Received Invitations</h3>
-        <p className="text-sm text-muted-foreground mt-2">You have not received any trip invitations yet.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          You have not received any trip invitations yet.
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -80,10 +87,14 @@ const ReceivedPendingInvitations = ({
       <div className="flex items-center gap-2 mb-4">
         <Mail className="w-5 h-5 text-blue-600" />
         <h3 className="text-lg font-semibold">Received Invitations</h3>
-        <span className="text-sm text-muted-foreground">({visibleInvitations.length})</span>
+        <span className="text-sm text-muted-foreground">
+          ({visibleInvitations.length})
+        </span>
       </div>
-      <p className="text-sm text-muted-foreground mb-4">Trip invitations you have received</p>
-      
+      <p className="text-sm text-muted-foreground mb-4">
+        Trip invitations you have received
+      </p>
+
       <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {visibleInvitations.map((invitation) => (
           <div
@@ -95,7 +106,9 @@ const ReceivedPendingInvitations = ({
                 <Mail className="w-5 h-5 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{invitation.tripName}</p>
+                <p className="font-medium text-sm truncate">
+                  {invitation.tripName}
+                </p>
                 <p className="text-xs text-muted-foreground truncate">
                   by {invitation.invitedBy.name}
                 </p>
@@ -112,7 +125,7 @@ const ReceivedPendingInvitations = ({
                 disabled={loadingId === invitation._id}
                 className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
               >
-                {loadingId === invitation._id ? 'Processing...' : 'Decline'}
+                {loadingId === invitation._id ? "Processing..." : "Decline"}
               </Button>
               <Button
                 size="sm"
@@ -120,7 +133,7 @@ const ReceivedPendingInvitations = ({
                 disabled={loadingId === invitation._id}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                {loadingId === invitation._id ? 'Processing...' : 'Accept'}
+                {loadingId === invitation._id ? "Processing..." : "Accept"}
               </Button>
             </div>
           </div>

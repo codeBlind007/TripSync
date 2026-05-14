@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   Card,
   CardContent,
@@ -25,6 +26,7 @@ const SendInvitation = ({ tripId, onSent }: pageProps) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const { getToken } = useAuth();
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,8 @@ const SendInvitation = ({ tripId, onSent }: pageProps) => {
     setSuccess(false);
 
     try {
-      const data = await inviteCollaborator(tripId, email);
+      const token = await getToken();
+      const data = await inviteCollaborator(tripId, email, token ?? undefined);
       if (!data?.invitation) {
         throw new Error("Failed to send invitation");
       }

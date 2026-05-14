@@ -1,6 +1,7 @@
 import express from "express";
 import User from "../models/User.js";
 import TripModel from "../models/Trips.js";
+import { clerkClient } from "@clerk/express";
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -15,9 +16,19 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
+// Helper to convert Clerk ID to MongoDB user ID
+const getUserMongoId = async (clerkUserId) => {
+  const user = await User.findOne({ clerkUserId });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user._id;
+};
+
 const respondToInvite = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const { tripId } = req.params;
     const { status } = req.body; // expected: 'accepted' or 'rejected'
 
@@ -41,7 +52,7 @@ const respondToInvite = async (req, res, next) => {
     }
 
     const invitationIndex = trip.pendingInvites.findIndex(
-      (inv) => inv.user.toString() === userId.toString()
+      (inv) => inv.user.toString() === userId.toString(),
     );
 
     if (invitationIndex === -1) {
@@ -70,7 +81,7 @@ const respondToInvite = async (req, res, next) => {
     await user.save();
 
     // Update related notification
-    
+
     // Optional real-time event
     // io.to(trip.owner.toString()).emit("trip:inviteResponse", { userId, tripId, status });
 
@@ -91,9 +102,10 @@ const upComingTrips = async (req, res, next) => {
   try {
     await TripModel.updateMany(
       { "itinerary.is_deleted": { $exists: false } },
-      { $set: { "itinerary.$[].is_deleted": false } }
+      { $set: { "itinerary.$[].is_deleted": false } },
     );
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const upComingTrips = await TripModel.find({
       $and: [
         {
@@ -126,37 +138,44 @@ const upComingTrips = async (req, res, next) => {
   }
 };
 
+const ongoingTrips = async (req, res, next) => {
+  try {
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
+    const trips = await TripModel.find({
+      $and: [
+        { $or: [{ owner: userId }, { collaborators: userId }] },
+        { startDate: { $lte: new Date() } },
+        { endDate: { $gt: new Date() } },
+      ],
+    }).populate("collaborators", "name email");
 
-const ongoingTrips = async(req, res) => {
-  const {userId} = req.user;
-  console.log(userId);
-  const trips = await TripModel.find({
-    $and: [
-      {$or: [{owner: userId}, {collaborators: userId}]},
-      {startDate: {$lte: new Date()}},
-      {endDate: {$gt: new Date()}}
-    ]
-  }).populate("collaborators", "name email");
-  
-  if(!trips.length){
-    return res.json({
-      message: 'No Ongoing Trips!'
-    })
+    if (!trips.length) {
+      return res.json({
+        message: "No Ongoing Trips!",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      results: trips.length,
+      data: {
+        trips,
+      },
+    });
+  } catch (error) {
+    console.error("ongoing trips error:", error);
+    return res.status(500).json({
+      message: "Something went wrong.",
+      error: error.message,
+    });
   }
-
-  res.status(200).json({
-    status: "success",
-    results: trips.length,
-    data: {
-      trips,
-    },
-  });
-
-}
+};
 
 const upComingTripsDashboard = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const upComingTrips = await TripModel.find({
       $and: [
         {
@@ -166,7 +185,10 @@ const upComingTripsDashboard = async (req, res, next) => {
           startDate: { $gte: new Date() },
         },
       ],
-    }).populate("collaborators", "name email").sort({startDate: 1}).limit(3);
+    })
+      .populate("collaborators", "name email")
+      .sort({ startDate: 1 })
+      .limit(3);
 
     if (!upComingTrips) {
       return res.status(400).json({
@@ -191,7 +213,8 @@ const upComingTripsDashboard = async (req, res, next) => {
 
 const completedTrips = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const completedTrips = await TripModel.find({
       $and: [
         {
@@ -226,7 +249,8 @@ const completedTrips = async (req, res, next) => {
 
 const completedTripsDashboard = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const completedTrips = await TripModel.find({
       $and: [
         {
@@ -236,7 +260,9 @@ const completedTripsDashboard = async (req, res, next) => {
           endDate: { $lte: new Date() },
         },
       ],
-    }).sort({endDate: -1}).limit(3);
+    })
+      .sort({ endDate: -1 })
+      .limit(3);
 
     if (!completedTrips) {
       return res.status(400).json({
@@ -259,12 +285,13 @@ const completedTripsDashboard = async (req, res, next) => {
   }
 };
 
-const allUserTrips = async(req, res, next) => {
+const allUserTrips = async (req, res, next) => {
   try {
-    const {userId} = req.user;
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId);
     const allTrips = await TripModel.find({
-      $or: [{ owner: userId }, { collaborators: userId }]
-    })
+      $or: [{ owner: userId }, { collaborators: userId }],
+    });
 
     if (!allTrips || allTrips.length === 0) {
       return res.status(400).json({
@@ -279,7 +306,6 @@ const allUserTrips = async(req, res, next) => {
         allTrips,
       },
     });
-
   } catch (error) {
     console.error("error fetching All Trips:", error);
     return res.status(500).json({
@@ -287,13 +313,80 @@ const allUserTrips = async(req, res, next) => {
       error: error.message,
     });
   }
-}
+};
 
-export const getUserInfo = (req, res) => {
-  res.json({
-    message: "User info",
-    user: req.user, // comes from authMiddleware
-  });
+export const getUserInfo = async (req, res, next) => {
+  try {
+    const clerkUserId = req.auth?.userId;
+
+    if (!clerkUserId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    let user = await User.findOne({ clerkUserId });
+
+    if (!user) {
+      const clerkUser = await clerkClient.users.getUser(clerkUserId);
+      const primaryEmail = clerkUser.emailAddresses.find(
+        (email) => email.id === clerkUser.primaryEmailAddressId,
+      )?.emailAddress;
+
+      const email = primaryEmail || `clerk-${clerkUserId}@example.com`;
+      const name =
+        clerkUser.fullName ||
+        [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+        clerkUser.username ||
+        "User";
+
+      // Reconcile existing account by email (e.g., user signed up via email/password earlier)
+      const existingByEmail = await User.findOne({ email });
+      if (existingByEmail) {
+        existingByEmail.clerkUserId = clerkUserId;
+        await existingByEmail.save();
+        user = existingByEmail;
+      } else {
+        try {
+          user = await User.create({
+            name,
+            email,
+            clerkUserId,
+            avatarUrl: clerkUser.imageUrl || "",
+          });
+        } catch (err) {
+          if (err && err.code === 11000) {
+            // Race condition: another process inserted this email concurrently
+            const found = await User.findOne({ email });
+            if (found) {
+              found.clerkUserId = clerkUserId;
+              await found.save();
+              user = found;
+            } else {
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User info fetched successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        clerkUserId: user.clerkUserId,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const userController = {
@@ -303,9 +396,9 @@ const userController = {
   completedTrips,
   getUserInfo,
   allUserTrips,
-  upComingTripsDashboard, 
+  upComingTripsDashboard,
   completedTripsDashboard,
-  ongoingTrips
+  ongoingTrips,
 };
 
 export default userController;

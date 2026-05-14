@@ -11,6 +11,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.15",
     "@emailjs/nodejs": "^5.0.2",
     "@upstash/redis": "^1.38.0",
     "bcrypt": "^6.0.0",

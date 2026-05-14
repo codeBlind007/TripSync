@@ -12,6 +12,19 @@ export const connectDB = async () => {
     );
   }
 
-  await mongoose.connect(mongoUri);
-  console.log("MongoDB connected");
+  try {
+    await mongoose.connect(mongoUri, {
+      maxPoolSize: 10,
+      minPoolSize: 5,
+      maxIdleTimeMS: 45000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      retryWrites: true,
+    });
+    console.log("MongoDB connected with optimized pool settings");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
 };

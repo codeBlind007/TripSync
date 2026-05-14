@@ -28,6 +28,7 @@ import authRouter from "./routes/authRouter.js";
 import { socketController } from "./controllers/socketController.js";
 import { connectDB } from "./utils/db.js";
 import { errorMiddleware } from "./middlewares/errorMiddleware.js";
+import {clerkMiddleware} from '@clerk/express';
 
 await connectDB();
 
@@ -38,6 +39,7 @@ const appUrl = isProduction ? process.env.DEPLOYED_FRONTEND_URL : process.env.FR
 
 app.use(cookieParser());
 app.use(express.json());
+
 app.use(
   cors({
     origin: appUrl, // Your frontend URL
@@ -53,7 +55,7 @@ app.use(session({
 
 
 app.use(express.urlencoded({ extended: true }));
-// app.use(passport.initialize());
+app.use(clerkMiddleware());
 
 const io = new Server(server, {
   cors: {
@@ -63,60 +65,6 @@ const io = new Server(server, {
 });
 
 
-// passport.use(
-//   new GoogleStrategy(
-//     {
-//       clientID: process.env.OAuth_Client_ID,
-//       clientSecret: process.env.OAuth_Client_Secret,
-//       callbackURL: "/auth/google/callback",
-//     },
-//     async (accessToken, refreshToken, profile, done) => {
-//       try {
-//         let user = await User.findOne({ googleId: profile.id }); // ✅ await added
-//         if (!user) {
-//           user = await User.create({
-//             googleId: profile.id,
-//             name: profile.displayName,
-//             email: profile.emails[0]?.value,
-//             avatar: profile.photos[0]?.value,
-//           });
-//         }
-
-//         return done(null, user); // ✅ user now has _id
-//       } catch (error) {
-//         return done(error, null);
-//       }
-//     }
-//   )
-// );
-
-// google routes
-
-// app.get(
-//   "/auth/google",
-//   passport.authenticate("google", { scope: ["profile", "email"] })
-// );
-
-// app.get(
-//   "/auth/google/callback",
-//   passport.authenticate("google", { session: false, failureRedirect: "/" }),
-//   (req, res) => {
-//     const token = jwt.sign(
-//       { userId: req.user._id },
-//       process.env.ACCESS_TOKEN_SECRET,
-//       { expiresIn: "72h" }
-//     );
-
-//     res.cookie("token", token, {
-//       httpOnly: true,
-//       secure: false, // 🔐 set to true in production (with HTTPS)
-//       sameSite: "Lax",
-//       maxAge: 72 * 60 * 60 * 1000, // 72 hours
-//     });
-
-//     res.redirect(`${process.env.CLIENT_URL}/dashboard`);
-//   }
-// );
 
 // Socket.IO connection handler
 

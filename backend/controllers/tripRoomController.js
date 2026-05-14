@@ -38,7 +38,7 @@ const normalizeRedisMessage = (value) => {
 
 const getTripRoomMessage = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const userId = req.auth?.userId;
     const { tripId } = req.params;
     // const { cursor, limit = 30 } = req.query;
 

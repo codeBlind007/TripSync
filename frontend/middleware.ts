@@ -1,29 +1,46 @@
+import {
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
+
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  const { pathname } = request.nextUrl;
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/login(.*)",
+  "/signup(.*)",
+  "/invite(.*)",
+]);
 
-  const publicPrefixes = ["/invite"];
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
 
-  const isPublic =
-    ["/", "/login", "/signup"].includes(pathname) ||
-    publicPrefixes.some((route) => pathname.startsWith(route));
+  const { pathname } = req.nextUrl;
 
-  // If logged in user tries to access login/signup
-  if (token && (pathname === "/login" || pathname === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Redirect logged-in users away from auth pages
+  if (
+    userId &&
+    (
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/signup")
+    )
+  ) {
+    return NextResponse.redirect(
+      new URL("/dashboard", req.url)
+    );
   }
 
-  // Protect all other routes
-  if (!token && !isPublic) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Protect private routes
+  if (!isPublicRoute(req)) {
+    await auth.protect();
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: [
+    "/((?!_next|.*\\..*).*)",
+    "/(api|trpc)(.*)",
+  ],
 };

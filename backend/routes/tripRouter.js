@@ -1,80 +1,107 @@
 import express from "express";
-import authController from "../controllers/authController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 import upload from "../utils/multer.js";
 import tripController from "../controllers/tripController.js";
 import tripRoomController from "../controllers/tripRoomController.js";
-import { createTripValidation, addItineraryActivitiesValidation, addTaskValidation, addExpensesValidation } from "../middlewares/tripValidation.js";
-import { validateInvitationRequest, getRecievedInvitation, getSentInvitation, acceptReceivedInvitation } from "../controllers/invitationController.js";
+import {
+  createTripValidation,
+  addItineraryActivitiesValidation,
+  addTaskValidation,
+  addExpensesValidation,
+} from "../middlewares/tripValidation.js";
+import {
+  validateInvitationRequest,
+  getRecievedInvitation,
+  getSentInvitation,
+  acceptReceivedInvitation,
+} from "../controllers/invitationController.js";
 const router = express.Router();
 
 router
   .route("/trips")
-  .get(authController.protect, tripController.getAllUserTrips)
-  .post(authController.protect, createTripValidation, tripController.createTrip);
+  .get(authMiddleware, tripController.getAllUserTrips)
+  .post(authMiddleware, createTripValidation, tripController.createTrip);
 
 router
   .route("/trips/:tripId")
-  .get(authController.protect, tripController.getTrip)
-  .delete(authController.protect, tripController.deleteTrip);
+  .get(authMiddleware, tripController.getTrip)
+  .delete(authMiddleware, tripController.deleteTrip);
 
 router
-  .route("/trips/:tripId/collaborators").get(authController.protect, tripController.getTripCollaborators)
-  .put(authController.protect, tripController.addCollaborators);
+  .route("/trips/:tripId/collaborators")
+  .get(authMiddleware, tripController.getTripCollaborators)
+  .put(authMiddleware, tripController.addCollaborators);
 
 router
   .route("/trips/:tripId/collaborators/:collaboratorId")
-  .delete(authController.protect, tripController.deleteCollaborators);
+  .delete(authMiddleware, tripController.deleteCollaborators);
 
 router
   .route("/trips/:tripId/itinerary")
-  .get(authController.protect, tripController.getTripItinerary)
-  .post(authController.protect, tripController.addItinerary);
+  .get(authMiddleware, tripController.getTripItinerary)
+  .post(authMiddleware, tripController.addItinerary);
 
 router
   .route("/trips/:tripId/itinerary/:itineraryId")
-  .post(authController.protect, addItineraryActivitiesValidation, tripController.addItineraryActivity)
-  .put(authController.protect, tripController.editItinerary)
-  .delete(authController.protect, tripController.deleteItinerary);
+  .post(
+    authMiddleware,
+    addItineraryActivitiesValidation,
+    tripController.addItineraryActivity,
+  )
+  .put(authMiddleware, tripController.editItinerary)
+  .delete(authMiddleware, tripController.deleteItinerary);
 
 router
   .route("/trips/:tripId/itinerary/:itineraryId/activities/:activityId")
-  .get(authController.protect, tripController.getItineraryActivity)
-  .put(authController.protect, tripController.editItineraryActivity)
-  .delete(authController.protect, tripController.deleteItineraryActivity);
+  .get(authMiddleware, tripController.getItineraryActivity)
+  .put(authMiddleware, tripController.editItineraryActivity)
+  .delete(authMiddleware, tripController.deleteItineraryActivity);
 
 router
   .route("/trips/:tripId/tasks")
-  .get(authController.protect, tripController.getTripTasks)
-  .post(authController.protect, addTaskValidation, tripController.addTask);
+  .get(authMiddleware, tripController.getTripTasks)
+  .post(authMiddleware, addTaskValidation, tripController.addTask);
 
 router
   .route("/trips/:tripId/tasks/:taskId")
-  .put(authController.protect, tripController.editTask)
-  .delete(authController.protect, tripController.deleteTask);
+  .put(authMiddleware, tripController.editTask)
+  .delete(authMiddleware, tripController.deleteTask);
 
 router
   .route("/trips/:tripId/expenses")
-  .get(authController.protect, tripController.getTripExpenses)
-  .post(authController.protect, addExpensesValidation, tripController.addExpenses);
+  .get(authMiddleware, tripController.getTripExpenses)
+  .post(authMiddleware, addExpensesValidation, tripController.addExpenses);
 
 router
   .route("/trips/:tripId/expenses/:expenseId")
-  .put(authController.protect, tripController.editExpenses);
+  .put(authMiddleware, tripController.editExpenses);
 
 router
   .route("/trips/:tripId/invite")
-  .post(authController.protect, tripController.inviteCollaborator);
+  .post(authMiddleware, tripController.inviteCollaborator);
 
-router.route("/trips/:tripId/story").get(authController.protect, tripController.getTripStory);
+router
+  .route("/trips/:tripId/story")
+  .get(authMiddleware, tripController.getTripStory);
 
 // TripRoom routes
-router.route("/trips/tripRooms/:tripId/messages").get(authController.protect, tripRoomController.getTripRoomMessage);
-router.route("/trips/tripRooms/:tripId/collaborators").get(authController.protect, tripController.getTripCollaborators);
+router
+  .route("/trips/tripRooms/:tripId/messages")
+  .get(authMiddleware, tripRoomController.getTripRoomMessage);
+router
+  .route("/trips/tripRooms/:tripId/collaborators")
+  .get(authMiddleware, tripController.getTripCollaborators);
 
 // Trip invitation
 
 router.route("/trips/invitations/validate").get(validateInvitationRequest);
-router.route("/trips/invitations/recieved").get(authController.protect, getRecievedInvitation);
-router.route("/trips/invitations/sent/:tripId").get(authController.protect, getSentInvitation);
-router.route("/trips/:tripId/invitations/:invitationId").patch(authController.protect, acceptReceivedInvitation);
+router
+  .route("/trips/invitations/recieved")
+  .get(authMiddleware, getRecievedInvitation);
+router
+  .route("/trips/invitations/sent/:tripId")
+  .get(authMiddleware, getSentInvitation);
+router
+  .route("/trips/:tripId/invitations/:invitationId")
+  .patch(authMiddleware, acceptReceivedInvitation);
 export default router;

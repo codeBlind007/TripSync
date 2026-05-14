@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckCircle2,
 } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 import { getUserInfo } from "@/lib/api";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -31,19 +32,21 @@ interface User {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = React.useState<User | null>(null);
   const { state, isMobile } = useSidebar();
+  const { getToken } = useAuth();
   React.useEffect(() => {
     async function fetchUser() {
-      const data = await getUserInfo();
+      const token = await getToken();
+      const data = await getUserInfo(token ?? undefined);
       if (data) {
         setUser({
           name: data.name,
           email: data.email,
-          avatar: data.avatar,
+          avatar: data.avatar || data.avatarUrl || data.imageUrl || undefined,
         });
       }
     }
     fetchUser();
-  }, []);
+  }, [getToken]);
   const navMain = [
     {
       title: "Dashboard",

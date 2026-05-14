@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 interface User {
   name: string;
@@ -37,8 +38,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export function NavUser(user: User) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const { signOut } = useAuth();
   const handleLogout = async () => {
     try {
+      // First clear Clerk client state
+      try {
+        if (signOut) await signOut();
+      } catch (err) {
+        console.warn("Client-side Clerk signOut failed:", err);
+      }
       const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: "POST",
         headers: {

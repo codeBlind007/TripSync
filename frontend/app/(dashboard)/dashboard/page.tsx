@@ -73,7 +73,7 @@ function formatDateRange(startDate: Date, endDate: Date): string {
   return `${start} - ${end}`;
 }
 
-// Thifrom your databases fetches actual data
+
 async function fetchDashboardData() {
   const user: User = { name: "" };
   const data = await getUserInfo();
@@ -136,11 +136,11 @@ async function fetchDashboardData() {
 
     // Get unique locations (trip titles as destinations)
     const uniqueDestinations = new Set(
-      allTrips.map((trip: Trip) => trip.destination),
+      completedTrips.map((trip: Trip) => trip.destination),
     );
 
     // Calculate total days traveled
-    const totalDaysTraveled = allTrips.reduce((total: number, trip: Trip) => {
+    const totalDaysTraveled = completedTrips.reduce((total: number, trip: Trip) => {
       return (
         total +
         daysBetween(new Date(trip.startDate), new Date(trip.endDate)) +
@@ -148,7 +148,7 @@ async function fetchDashboardData() {
       );
     }, 0);
 
-    const totalExpenses = allTrips.reduce((total: number, trip: Trip) => {
+    const totalExpenses = completedTrips.reduce((total: number, trip: Trip) => {
       const tripExpense =
         trip.expenses?.reduce((sum, exp) => sum + exp.amount, 0) || 0;
       return total + tripExpense;

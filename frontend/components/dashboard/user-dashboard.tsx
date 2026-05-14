@@ -88,8 +88,8 @@ export default function DashboardClient({
   };
 
   // Handler for viewing a trip
-  const handleViewTrip = (tripId: string) => {
-    router.push(`/trips/${tripId}`);
+  const handleViewTrip = () => {
+    router.push(`/dashboard/trips/upcoming-trips`);
   };
 
   return (
@@ -166,7 +166,7 @@ export default function DashboardClient({
                 <div
                   key={trip.id}
                   className="flex flex-col gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between cursor-pointer"
-                  onClick={() => handleViewTrip(trip.id)}
+                  onClick={() => handleViewTrip()}
                 >
                   <div className="flex items-start space-x-3 sm:items-center sm:space-x-4">
                     <div className="text-2xl">✈️</div>
@@ -279,7 +279,7 @@ export default function DashboardClient({
                 <div
                   key={trip.id}
                   className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleViewTrip(trip.id)}
+                  onClick={() => handleViewTrip()}
                 >
                   <div className="text-xl">🏖️</div>
                   <div className="flex-1 min-w-0">

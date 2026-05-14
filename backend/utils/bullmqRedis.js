@@ -12,4 +12,25 @@ dotenv.config({ path: resolve(__dirname, "../.env") });
 
 export const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  enableOfflineQueue: true,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  reconnectOnError: (err) => {
+    const targetError = "READONLY";
+    if (err.message.includes(targetError)) {
+      return true;
+    }
+    return false;
+  },
+});
+
+connection.on("error", (err) => {
+  console.error("Redis connection error:", err);
+});
+
+connection.on("connect", () => {
+  console.log("Redis connected for BullMQ");
 });

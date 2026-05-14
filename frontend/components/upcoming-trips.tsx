@@ -7,6 +7,7 @@ import {
   Plus,
   List,
   DollarSign,
+  IndianRupee,
   Users,
   CheckCircle,
   Clock,
@@ -308,13 +309,13 @@ const TripCard = ({ trip }: { trip: Trip }) => {
 
           <div className="bg-purple-50 rounded-xl p-3.5 border border-purple-100 hover:border-purple-200 transition-colors">
             <div className="flex items-center gap-2 mb-1.5">
-              <DollarSign className="h-4 w-4 text-purple-600" />
+              <IndianRupee className="h-4 w-4 text-purple-600" />
               <span className="text-xs font-semibold text-purple-800 uppercase tracking-wide">
                 Budget
               </span>
             </div>
             <div className="text-lg font-bold text-purple-900">
-              ${expensesTotal.toFixed(0)}
+              {expensesTotal.toFixed(0)}
               <span className="text-sm font-normal text-purple-700 ml-1">
                 planned
               </span>
