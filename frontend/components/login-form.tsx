@@ -15,8 +15,7 @@ import {
 } from "@radix-ui/react-icons";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { buildClientApiUrl } from "@/lib/client-api";
 
 export function LoginForm({
   className,
@@ -39,7 +38,7 @@ export function LoginForm({
 
     try {
       const res = await fetch(
-        `${API_BASE_URL}/api/auth/login${token ? `?invite=${token}` : ""}`,
+        buildClientApiUrl(`/api/auth/login${token ? `?invite=${token}` : ""}`),
         {
           method: "POST",
           headers: {
@@ -77,7 +76,7 @@ export function LoginForm({
         setIsLoading(true);
         try {
           const res = await fetch(
-            `${API_BASE_URL}/api/trips/invitations/validate?token=${token}`,
+            buildClientApiUrl(`/api/trips/invitations/validate?token=${token}`),
             {
               credentials: "include",
             },

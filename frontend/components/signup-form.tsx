@@ -10,8 +10,7 @@ import { useRouter } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { buildClientApiUrl } from "@/lib/client-api";
 
 export function SignupForm({
   className,
@@ -32,7 +31,9 @@ export function SignupForm({
 
     try {
       const res = await fetch(
-        `${API_BASE_URL}/api/auth/create-account${token ? `?invite=${token}` : ""}`,
+        buildClientApiUrl(
+          `/api/auth/create-account${token ? `?invite=${token}` : ""}`,
+        ),
         {
           method: "POST",
           headers: {
@@ -65,7 +66,7 @@ export function SignupForm({
         setIsLoading(true);
         try {
           const res = await fetch(
-            `${API_BASE_URL}/api/trips/invitations/validate?token=${token}`,
+            buildClientApiUrl(`/api/trips/invitations/validate?token=${token}`),
             {
               credentials: "include",
             },
