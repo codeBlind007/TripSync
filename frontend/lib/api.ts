@@ -54,6 +54,31 @@ export async function getUserInfo(authToken?: string) {
   }
 }
 
+export async function syncOAuthUser() {
+  try {
+    const cookieStore = await cookies();
+    const res = await fetch(buildApiUrl("/api/auth/oauth-callback"), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Cookie: cookieStore.toString(),
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error("failed to sync oauth user");
+    }
+
+    const data = await res.json();
+    return data.data?.user ?? null;
+  } catch (error) {
+    console.error("Error syncing oauth user:", error);
+    return null;
+  }
+}
+
 export async function getAllUserTrips() {
   try {
     const cookieStore = await cookies();

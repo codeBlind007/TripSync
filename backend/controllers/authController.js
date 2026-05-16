@@ -150,19 +150,38 @@ const oauthCallback = async (req, res, next) => {
       throw new AppError("Unauthorized", 401);
     }
 
+    const clerkUser = await clerkClient.users.getUser(clerkUserId);
+    const email =
+      clerkUser.emailAddresses
+        ?.find((address) => address.id === clerkUser.primaryEmailAddressId)
+        ?.emailAddress?.toLowerCase() ||
+      clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase();
+    const name =
+      [clerkUser.firstName, clerkUser.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      clerkUser.username ||
+      "User";
+    const avatarUrl = clerkUser.imageUrl || "";
+
+    if (!email) {
+      throw new AppError("Unable to determine email from Google account", 400);
+    }
+
     // Check if user exists by Clerk ID
     let user = await userSchema.findOne({ clerkUserId });
 
     // If user doesn't exist, try to reconcile by email, or create a new record
     if (!user) {
-      const clerkUser = req.auth;
-      const email = clerkUser.email || `clerk-${clerkUserId}@example.com`;
-      const name = clerkUser.name || "User";
-
       // If a user already exists with this email (registered earlier), attach clerkUserId
       const existingByEmail = await userSchema.findOne({ email });
       if (existingByEmail) {
         existingByEmail.clerkUserId = clerkUserId;
+        existingByEmail.avatarUrl = avatarUrl;
+        if (!existingByEmail.name) {
+          existingByEmail.name = name;
+        }
         await existingByEmail.save();
         user = existingByEmail;
       } else {
@@ -172,6 +191,7 @@ const oauthCallback = async (req, res, next) => {
             email,
             clerkUserId,
             password: null, // No password for OAuth users
+            avatarUrl,
           });
           await user.save();
         } catch (err) {
@@ -180,6 +200,7 @@ const oauthCallback = async (req, res, next) => {
             const found = await userSchema.findOne({ email });
             if (found) {
               found.clerkUserId = clerkUserId;
+              found.avatarUrl = avatarUrl;
               await found.save();
               user = found;
             } else {

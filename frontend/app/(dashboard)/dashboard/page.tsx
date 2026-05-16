@@ -4,6 +4,7 @@ import {
   getUserCompletedTrips,
   getUserUpcomingTrips,
   getAllUserTrips,
+  syncOAuthUser,
 } from "@/lib/api";
 
 import DashboardClient from "@/components/dashboard/user-dashboard";
@@ -73,12 +74,17 @@ function formatDateRange(startDate: Date, endDate: Date): string {
   return `${start} - ${end}`;
 }
 
-
 async function fetchDashboardData() {
   const user: User = { name: "" };
   const data = await getUserInfo();
-  if (data) {
-    user.name = data.name;
+
+  if (!data) {
+    await syncOAuthUser();
+  }
+
+  const refreshedUser = data ?? (await getUserInfo());
+  if (refreshedUser) {
+    user.name = refreshedUser.name;
   }
 
   const currentDate = new Date();
@@ -140,13 +146,16 @@ async function fetchDashboardData() {
     );
 
     // Calculate total days traveled
-    const totalDaysTraveled = completedTrips.reduce((total: number, trip: Trip) => {
-      return (
-        total +
-        daysBetween(new Date(trip.startDate), new Date(trip.endDate)) +
-        1
-      );
-    }, 0);
+    const totalDaysTraveled = completedTrips.reduce(
+      (total: number, trip: Trip) => {
+        return (
+          total +
+          daysBetween(new Date(trip.startDate), new Date(trip.endDate)) +
+          1
+        );
+      },
+      0,
+    );
 
     const totalExpenses = completedTrips.reduce((total: number, trip: Trip) => {
       const tripExpense =
