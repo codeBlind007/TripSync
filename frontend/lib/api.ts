@@ -1,5 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
+import { auth } from "@clerk/nextjs/server";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 
@@ -29,13 +30,18 @@ function buildApiUrl(path: string) {
   return `${BACKEND_URL}${path}`;
 }
 
+async function getRequestAuthToken() {
+  const { getToken } = await auth();
+  return getToken();
+}
+
 export async function getUserInfo(authToken?: string) {
   try {
-    const cookieStore = authToken ? null : await cookies();
+    const requestAuthToken = authToken ?? (await getRequestAuthToken());
     const res = await fetch(buildApiUrl("/api/user/me"), {
       method: "GET",
       credentials: "include",
-      headers: buildAuthHeaders(cookieStore, authToken, {
+      headers: buildAuthHeaders(null, requestAuthToken ?? undefined, {
         "Content-Type": "application/json",
       }),
       cache: "no-store",
@@ -56,12 +62,12 @@ export async function getUserInfo(authToken?: string) {
 
 export async function syncOAuthUser() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/auth/oauth-callback"), {
       method: "POST",
       credentials: "include",
       headers: {
-        Cookie: cookieStore.toString(),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         "Content-Type": "application/json",
       },
       cache: "no-store",
@@ -81,12 +87,12 @@ export async function syncOAuthUser() {
 
 export async function getAllUserTrips() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/all-trips"), {
       method: "GET",
       credentials: "include",
       headers: {
-        Cookie: cookieStore.toString(),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         "Content-Type": "application/json",
       },
       cache: "no-store",
@@ -103,12 +109,12 @@ export async function getAllUserTrips() {
 
 export async function getUserUpcomingTrips() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/upcoming-trips-dashboard"), {
       method: "GET",
       credentials: "include",
       headers: {
-        Cookie: cookieStore.toString(),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         "Content-Type": "application/json",
       },
       cache: "no-store",
@@ -125,10 +131,10 @@ export async function getUserUpcomingTrips() {
 
 export async function getCompletedTrips() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/completed-trips"), {
       headers: {
-        Cookie: cookieStore.toString(),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       },
       next: { tags: ["completed-trips"] },
     });
@@ -144,12 +150,12 @@ export async function getCompletedTrips() {
 
 export async function getOngoingTrips() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/ongoing-trips"), {
       method: "GET",
       credentials: "include",
       headers: {
-        Cookie: cookieStore.toString(),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         "Content-Type": "application/json",
       },
       cache: "no-store",
@@ -166,14 +172,14 @@ export async function getOngoingTrips() {
 
 export async function getUserCompletedTrips() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(
       buildApiUrl("/api/user/completed-trips-dashboard"),
       {
         method: "GET",
         credentials: "include",
         headers: {
-          Cookie: cookieStore.toString(),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
           "Content-Type": "application/json",
         },
         cache: "no-store",

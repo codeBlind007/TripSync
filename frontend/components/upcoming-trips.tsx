@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 export type Activity = {
   activityId: string;
@@ -405,13 +406,16 @@ const UpcomingTrips: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { getToken } = useAuth();
   useEffect(() => {
     const getUpcomingTrips = async () => {
       try {
+        const token = await getToken();
         const res = await fetch(`${API_BASE_URL}/api/user/upcoming-trips`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           credentials: "include",
         });
@@ -432,7 +436,7 @@ const UpcomingTrips: React.FC = () => {
     };
 
     getUpcomingTrips();
-  }, []);
+  }, [getToken]);
 
   if (isLoading) {
     return (
