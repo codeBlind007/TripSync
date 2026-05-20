@@ -3,17 +3,36 @@ dotenv.config();
 import { mailer } from "../utils/mailer.js";
 import InvitationModel from "../models/Invitation.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 import TripModel from "../models/Trips.js";
 import { inviteEmailTemplate } from "../utils/inviteEmailTemplate.js";
 import AppError from "../utils/AppError.js";
 
-// Helper to convert Clerk ID to MongoDB user ID
-const getUserMongoId = async (clerkUserId) => {
-  const user = await User.findOne({ clerkUserId });
-  if (!user) {
-    throw new Error("User not found");
+// Helper to resolve an authenticated user to a MongoDB user ID.
+// Accepts a Clerk ID, a MongoDB _id, or an email fallback.
+const getUserMongoId = async (identifier, email) => {
+  if (
+    identifier &&
+    mongoose?.Types?.ObjectId &&
+    mongoose.Types.ObjectId.isValid(identifier)
+  ) {
+    try {
+      const byId = await User.findById(identifier);
+      if (byId) return byId._id;
+    } catch (e) {}
   }
-  return user._id;
+
+  if (identifier) {
+    const byClerk = await User.findOne({ clerkUserId: identifier });
+    if (byClerk) return byClerk._id;
+  }
+
+  if (email) {
+    const byEmail = await User.findOne({ email: String(email).toLowerCase() });
+    if (byEmail) return byEmail._id;
+  }
+
+  throw new Error("User not found");
 };
 
 export const sendInvitationEmail = async ({
@@ -90,7 +109,7 @@ export const getRecievedInvitation = async (req, res, next) => {
       throw new AppError("User is not authenticated", 401);
     }
 
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const user = await User.findOne({ _id: userId });
 
     const invitation = await InvitationModel.find({
@@ -124,7 +143,7 @@ export const getSentInvitation = async (req, res, next) => {
     }
 
     // Note: userId not used in this function, just validate auth
-    await getUserMongoId(clerkUserId);
+    await getUserMongoId(clerkUserId, req.user?.email);
 
     const invitation = await InvitationModel.find({
       tripId: tripId,
@@ -159,7 +178,7 @@ export const acceptReceivedInvitation = async (req, res, next) => {
       throw new AppError("User is not authenticated", 401);
     }
 
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
 
     if (!tripId || !invitationId) {
       throw new AppError("tripId and invitationId are required", 400);
@@ -229,7 +248,7 @@ export const rejectReceivedInvitation = async (req, res, next) => {
       throw new AppError("User is not authenticated", 401);
     }
 
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
 
     if (!tripId || !invitationId) {
       throw new AppError("tripId and invitationId are required", 400);

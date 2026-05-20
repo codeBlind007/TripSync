@@ -22,7 +22,16 @@ const tripSchema = new Schema({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     default: [],
   },
+  
+  inviteCode: {
+    type: String,
+    default: null,
+  },
 
+  inviteLinkEnabled: {
+    type: Boolean,
+    default: false,
+  },
   startDate: {
     type: Date,
     default: Date.now,

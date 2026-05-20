@@ -9,12 +9,14 @@ import {
   addTaskValidation,
   addExpensesValidation,
 } from "../middlewares/tripValidation.js";
+
 import {
   validateInvitationRequest,
   getRecievedInvitation,
   getSentInvitation,
   acceptReceivedInvitation,
 } from "../controllers/invitationController.js";
+
 const router = express.Router();
 
 router
@@ -78,11 +80,8 @@ router
 
 router
   .route("/trips/:tripId/invite")
-  .post(authMiddleware, tripController.inviteCollaborator);
+  .get(authMiddleware, tripController.generateInviteLink);
 
-router
-  .route("/trips/:tripId/story")
-  .get(authMiddleware, tripController.getTripStory);
 
 // TripRoom routes
 router
@@ -104,4 +103,10 @@ router
 router
   .route("/trips/:tripId/invitations/:invitationId")
   .patch(authMiddleware, acceptReceivedInvitation);
+
+router.post(
+  "/trips/join/:inviteCode",
+  authMiddleware,
+  tripController.joinTripByInviteLink,
+);
 export default router;

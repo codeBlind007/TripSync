@@ -1,5 +1,6 @@
 import express from "express";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 import TripModel from "../models/Trips.js";
 import { clerkClient } from "@clerk/express";
 
@@ -16,16 +17,27 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
+const getUserMongoId = async (identifier, email) => {
+  // If identifier looks like a Mongo ObjectId, try by _id first
+  if (identifier && mongoose.Types.ObjectId.isValid(identifier)) {
+    try {
+      const byId = await User.findById(identifier);
+      if (byId) return byId._id;
+    } catch (err) {
+      // ignore
+    }
+  }
 
-const getUserMongoId = async (maybeId) => {
-  // Try lookup by clerkUserId first
-  let user = await User.findOne({ clerkUserId: maybeId });
-  if (user) return user._id;
-  try {
-    user = await User.findById(maybeId);
-    if (user) return user._id;
-  } catch (err) {
-    
+  // Try lookup by clerkUserId
+  if (identifier) {
+    const byClerk = await User.findOne({ clerkUserId: identifier });
+    if (byClerk) return byClerk._id;
+  }
+
+  // Fallback: try email
+  if (email) {
+    const byEmail = await User.findOne({ email: String(email).toLowerCase() });
+    if (byEmail) return byEmail._id;
   }
 
   throw new Error("User not found");
@@ -34,7 +46,7 @@ const getUserMongoId = async (maybeId) => {
 const respondToInvite = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const { tripId } = req.params;
     const { status } = req.body; // expected: 'accepted' or 'rejected'
 
@@ -111,7 +123,7 @@ const upComingTrips = async (req, res, next) => {
       { $set: { "itinerary.$[].is_deleted": false } },
     );
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const upComingTrips = await TripModel.find({
       $and: [
         {
@@ -147,7 +159,7 @@ const upComingTrips = async (req, res, next) => {
 const ongoingTrips = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const trips = await TripModel.find({
       $and: [
         { $or: [{ owner: userId }, { collaborators: userId }] },
@@ -181,7 +193,7 @@ const ongoingTrips = async (req, res, next) => {
 const upComingTripsDashboard = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const upComingTrips = await TripModel.find({
       $and: [
         {
@@ -220,7 +232,7 @@ const upComingTripsDashboard = async (req, res, next) => {
 const completedTrips = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const completedTrips = await TripModel.find({
       $and: [
         {
@@ -256,7 +268,7 @@ const completedTrips = async (req, res, next) => {
 const completedTripsDashboard = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const completedTrips = await TripModel.find({
       $and: [
         {
@@ -294,7 +306,7 @@ const completedTripsDashboard = async (req, res, next) => {
 const allUserTrips = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId);
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const allTrips = await TripModel.find({
       $or: [{ owner: userId }, { collaborators: userId }],
     });
