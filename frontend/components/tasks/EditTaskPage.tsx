@@ -1,8 +1,9 @@
 "use client";
-import { useState} from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { ArrowLeft, CheckCircle2, Circle, Save } from "lucide-react";
-import { Tasks} from "./TasksList";
+import { Tasks } from "./TasksList";
 
 interface EditTaskPageProps {
   tasks: Tasks;
@@ -15,50 +16,54 @@ interface EditTaskPageProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export function EditTaskPage({ 
-  tasks, 
+export function EditTaskPage({
+  tasks,
   tripId,
-  availableAssignees
+  availableAssignees,
 }: EditTaskPageProps) {
   const [taskText, setTaskText] = useState(tasks.text);
-  const [selectedAssignee, setSelectedAssignee] = useState(tasks.assignedTo._id);
+  const [selectedAssignee, setSelectedAssignee] = useState(
+    tasks.assignedTo._id,
+  );
   const [isCompleted, setIsCompleted] = useState(tasks.completed);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { getToken } = useAuth();
   console.log("component called");
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!taskText.trim() || !selectedAssignee) return;
+    if (!taskText.trim() || !selectedAssignee) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const res = await fetch(
-      `${API_BASE_URL}/api/trips/${tripId}/tasks/${tasks.taskId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      const token = await getToken();
+      const res = await fetch(
+        `${API_BASE_URL}/api/trips/${tripId}/tasks/${tasks.taskId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            text: taskText.trim(),
+            assignedTo: selectedAssignee,
+            completed: isCompleted,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          text: taskText.trim(),
-          assignedTo: selectedAssignee,
-          completed: isCompleted,
-        }),
-      }
-    );
+      );
 
-    if (!res.ok) throw new Error("Failed to update task");
+      if (!res.ok) throw new Error("Failed to update task");
 
-    router.push(`/tasks/${tripId}`);
-  } catch (error) {
-    console.error("Error updating task:", error);
-    setIsSubmitting(false);
-  }
-};
-
+      router.push(`/tasks/${tripId}`);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      setIsSubmitting(false);
+    }
+  };
 
   const handleCancel = () => {
     router.back();
@@ -77,7 +82,9 @@ export function EditTaskPage({
             Back to Tasks
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Edit Task</h1>
-          <p className="text-gray-600 mt-2">Update task details and assignment</p>
+          <p className="text-gray-600 mt-2">
+            Update task details and assignment
+          </p>
         </div>
 
         {/* Form Card */}
@@ -85,7 +92,10 @@ export function EditTaskPage({
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
             {/* Task Description */}
             <div>
-              <label htmlFor="taskText" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label
+                htmlFor="taskText"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
                 Task Description <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -104,7 +114,10 @@ export function EditTaskPage({
 
             {/* Assignee Selection */}
             <div>
-              <label htmlFor="assignee" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label
+                htmlFor="assignee"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
                 Assigned To <span className="text-red-500">*</span>
               </label>
               <select
@@ -142,9 +155,13 @@ export function EditTaskPage({
                       : "border-gray-300 bg-white hover:border-gray-400"
                   }`}
                 >
-                  <Circle className={`h-5 w-5 ${!isCompleted ? "text-blue-600" : "text-gray-400"}`} />
+                  <Circle
+                    className={`h-5 w-5 ${!isCompleted ? "text-blue-600" : "text-gray-400"}`}
+                  />
                   <div className="flex-1 text-left">
-                    <div className={`font-medium ${!isCompleted ? "text-blue-900" : "text-gray-700"}`}>
+                    <div
+                      className={`font-medium ${!isCompleted ? "text-blue-900" : "text-gray-700"}`}
+                    >
                       Pending
                     </div>
                     <div className="text-sm text-gray-500">
@@ -163,9 +180,13 @@ export function EditTaskPage({
                       : "border-gray-300 bg-white hover:border-gray-400"
                   }`}
                 >
-                  <CheckCircle2 className={`h-5 w-5 ${isCompleted ? "text-green-600" : "text-gray-400"}`} />
+                  <CheckCircle2
+                    className={`h-5 w-5 ${isCompleted ? "text-green-600" : "text-gray-400"}`}
+                  />
                   <div className="flex-1 text-left">
-                    <div className={`font-medium ${isCompleted ? "text-green-900" : "text-gray-700"}`}>
+                    <div
+                      className={`font-medium ${isCompleted ? "text-green-900" : "text-gray-700"}`}
+                    >
                       Completed
                     </div>
                     <div className="text-sm text-gray-500">
@@ -216,9 +237,12 @@ export function EditTaskPage({
               </div>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-blue-900 mb-1">Quick Tip</h3>
+              <h3 className="text-sm font-medium text-blue-900 mb-1">
+                Quick Tip
+              </h3>
               <p className="text-sm text-blue-800">
-                Make sure to assign tasks to the right team members and update the status as work progresses to keep everyone informed.
+                Make sure to assign tasks to the right team members and update
+                the status as work progresses to keep everyone informed.
               </p>
             </div>
           </div>

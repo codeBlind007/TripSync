@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import {
   Plus,
@@ -35,16 +36,15 @@ interface FormData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 console.log("API_BASE_URL:", API_BASE_URL);
+
 export default function AddTask({ tripId, users }: AddTaskProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
+  console.log(users);
   const demoUsers =
     users?.length > 0
       ? users
-      : [
-          { _id: "1", name: "John Smith", email: "john@example.com" },
-          { _id: "2", name: "Sarah Johnson", email: "sarah@example.com" },
-          { _id: "3", name: "Mike Wilson", email: "mike@example.com" },
-        ];
+      : [];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +103,7 @@ export default function AddTask({ tripId, users }: AddTaskProps) {
       setError(null);
 
       try {
+        const token = await getToken();
         const requestBody = {
           text: formData.text.trim(),
           assignedTo: formData.assignedTo,
@@ -115,6 +116,7 @@ export default function AddTask({ tripId, users }: AddTaskProps) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             credentials: "include",
             body: JSON.stringify(requestBody),

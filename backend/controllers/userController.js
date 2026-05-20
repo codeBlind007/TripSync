@@ -16,13 +16,19 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-// Helper to convert Clerk ID to MongoDB user ID
-const getUserMongoId = async (clerkUserId) => {
-  const user = await User.findOne({ clerkUserId });
-  if (!user) {
-    throw new Error("User not found");
+
+const getUserMongoId = async (maybeId) => {
+  // Try lookup by clerkUserId first
+  let user = await User.findOne({ clerkUserId: maybeId });
+  if (user) return user._id;
+  try {
+    user = await User.findById(maybeId);
+    if (user) return user._id;
+  } catch (err) {
+    
   }
-  return user._id;
+
+  throw new Error("User not found");
 };
 
 const respondToInvite = async (req, res, next) => {
@@ -317,24 +323,35 @@ const allUserTrips = async (req, res, next) => {
 
 export const getUserInfo = async (req, res, next) => {
   try {
-    const clerkUserId = req.auth?.userId;
+    const authUserId = req.auth?.userId;
 
-    if (!clerkUserId) {
+    if (!authUserId) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    let user = await User.findOne({ clerkUserId });
+    // Try to find by clerkUserId first, then fallback to _id (used by our backend token)
+    let user = await User.findOne({ clerkUserId: authUserId });
 
     if (!user) {
-      const clerkUser = await clerkClient.users.getUser(clerkUserId);
+      // If the authUserId is actually a MongoDB _id, try that
+      try {
+        user = await User.findById(authUserId);
+      } catch (err) {
+        user = null;
+      }
+    }
+
+    // If still not found, assume this is a Clerk ID and attempt to reconcile via Clerk
+    if (!user) {
+      const clerkUser = await clerkClient.users.getUser(authUserId);
       const primaryEmail = clerkUser.emailAddresses.find(
         (email) => email.id === clerkUser.primaryEmailAddressId,
       )?.emailAddress;
 
-      const email = primaryEmail || `clerk-${clerkUserId}@example.com`;
+      const email = primaryEmail || `clerk-${authUserId}@example.com`;
       const name =
         clerkUser.fullName ||
         [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
@@ -344,7 +361,7 @@ export const getUserInfo = async (req, res, next) => {
       // Reconcile existing account by email (e.g., user signed up via email/password earlier)
       const existingByEmail = await User.findOne({ email });
       if (existingByEmail) {
-        existingByEmail.clerkUserId = clerkUserId;
+        existingByEmail.clerkUserId = authUserId;
         await existingByEmail.save();
         user = existingByEmail;
       } else {
@@ -352,7 +369,7 @@ export const getUserInfo = async (req, res, next) => {
           user = await User.create({
             name,
             email,
-            clerkUserId,
+            clerkUserId: authUserId,
             avatarUrl: clerkUser.imageUrl || "",
           });
         } catch (err) {
@@ -360,7 +377,7 @@ export const getUserInfo = async (req, res, next) => {
             // Race condition: another process inserted this email concurrently
             const found = await User.findOne({ email });
             if (found) {
-              found.clerkUserId = clerkUserId;
+              found.clerkUserId = authUserId;
               await found.save();
               user = found;
             } else {

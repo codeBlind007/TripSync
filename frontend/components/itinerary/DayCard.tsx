@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ActivityCard } from "./ActivityCard";
 import type { ItineraryDay } from "./ItineraryClient";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,7 @@ export function DayCard({
   isCompleted,
 }: DayCardProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -57,10 +59,14 @@ export function DayCard({
   };
 
   const handleDeleteItinerary = async () => {
+    const token = await getToken();
     const res = await fetch(
       `${API_BASE_URL}/api/trips/${tripId}/itinerary/${itineraryId}`,
       {
         method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         credentials: "include",
       },
     );

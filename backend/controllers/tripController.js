@@ -67,6 +67,7 @@ const createTrip = async (req, res, next) => {
       title,
       description,
       startDate,
+      collaborators: [new mongoose.Types.ObjectId(ownerId)],
       endDate,
       destination,
       owner: ownerId,
@@ -139,7 +140,7 @@ const getTripCollaborators = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(tripId)) {
       throw new AppError("Invalid Trip ID", 400);
     }
-    // Find the trip and verify access
+
     const trip = await TripModel.findOne({
       _id: tripId,
       $or: [{ owner: userId }, { collaborators: userId }],
@@ -147,11 +148,11 @@ const getTripCollaborators = async (req, res, next) => {
       path: "collaborators",
       select: "name email", // Fetch only name and email
     });
-
+   
     if (!trip) {
       throw new AppError("Trip not found or access denied", 404);
     }
-
+    console.log(trip.collaborators);
     // Return collaborator details
     return res.status(200).json({
       success: true,
@@ -252,7 +253,7 @@ const getTripItinerary = async (req, res, next) => {
     const { tripId } = req.params;
     const clerkUserId = req.auth?.userId;
     const userId = await getUserMongoId(clerkUserId);
-
+    console.log(clerkUserId);
     if (!tripId) {
       throw new AppError("Trip ID is required", 400);
     }

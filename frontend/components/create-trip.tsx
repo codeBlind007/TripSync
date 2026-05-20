@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,7 @@ import {
   Plane,
   Camera,
 } from "lucide-react";
+import { buildClientApiUrl } from "@/lib/client-api";
 
 interface FormData {
   title: string;
@@ -37,10 +39,9 @@ interface FormErrors {
   destination?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
 export default function CreateTripPage() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -126,10 +127,12 @@ export default function CreateTripPage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/trips`, {
+      const token = await getToken();
+      const res = await fetch(buildClientApiUrl("/api/trips"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         credentials: "include",
         body: JSON.stringify({

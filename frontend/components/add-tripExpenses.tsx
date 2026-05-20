@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -110,6 +111,7 @@ export function ExpenseForm({
   collaborators,
 }: ExpenseFormProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ExpenseFormValues>({
@@ -161,6 +163,7 @@ export function ExpenseForm({
     console.log("Form submission triggered", data);
     setIsSubmitting(true);
     try {
+      const token = await getToken();
       const payload = {
         ...data,
         spentBy: currentUserId, // Automatically set the current user as the payer
@@ -172,6 +175,7 @@ export function ExpenseForm({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           credentials: "include",
           body: JSON.stringify(payload),

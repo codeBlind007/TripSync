@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +62,7 @@ export default function EditActivityClient({
   initialData,
 }: EditActivityClientProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [formData, setFormData] = useState<ActivityFormData>({
     title: initialData?.title || "",
     time: initialData?.time || "",
@@ -114,6 +116,7 @@ export default function EditActivityClient({
     setIsLoading(true);
 
     try {
+      const token = await getToken();
       const url = isEditing
         ? `${API_BASE_URL}/api/trips/${tripId}/itinerary/${itineraryId}/activities/${activityId}`
         : `${API_BASE_URL}/api/trips/${tripId}/itinerary/${itineraryId}`;
@@ -124,6 +127,7 @@ export default function EditActivityClient({
         method,
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(formData),
         credentials: "include",
@@ -156,10 +160,14 @@ export default function EditActivityClient({
 
     setIsLoading(true);
     try {
+      const token = await getToken();
       const response = await fetch(
         `${API_BASE_URL}/api/trips/${tripId}/itinerary/${itineraryId}/activities/${activityId}`,
         {
           method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           credentials: "include",
         },
       );

@@ -1,6 +1,7 @@
 "use client";
 import { CheckCircle2, Circle, Edit3, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ export function TaskItem({
   isCompleted = false,
 }: TaskItemProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -52,10 +54,14 @@ export function TaskItem({
 
   const handleDelete = async () => {
     try {
+      const token = await getToken();
       const res = await fetch(
         `${API_BASE_URL}/api/trips/${tripId}/tasks/${task.taskId}`,
         {
           method: "DELETE",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           credentials: "include",
         },
       );
@@ -150,7 +156,9 @@ export function TaskItem({
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                      <AlertDialogCancel className="cursor-pointer">
+                        Cancel
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDelete}
                         className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"

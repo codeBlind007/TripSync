@@ -3,6 +3,7 @@ import validator from "validator";
 import dotenv from "dotenv";
 import userSchema from "../models/User.js";
 import { clerkClient } from "@clerk/express";
+import jwt from "jsonwebtoken";
 import tripController from "./tripController.js";
 import AppError from "../utils/AppError.js";
 dotenv.config();
@@ -13,7 +14,6 @@ const createAccount = async (req, res, next) => {
     const { invite: inviteToken } = req.query;
     const clerkUserId = req.auth?.userId;
 
-    // Check if user already exists
     const isUser = await userSchema.findOne({ email });
     if (isUser) {
       throw new AppError("User already exists", 400);
@@ -25,7 +25,7 @@ const createAccount = async (req, res, next) => {
       name,
       email,
       password: hashedPassword,
-      clerkUserId, // Store Clerk user ID for OAuth users
+      clerkUserId,
     });
 
     await user.save();
@@ -78,6 +78,23 @@ const login = async (req, res, next) => {
       } catch (err) {
         return next(new AppError("Invalid or expired invite link", 400));
       }
+    }
+
+    try {
+      const token = jwt.sign(
+        { id: user._id.toString(), email: user.email },
+        process.env.ACCESS_TOKEN_SECRET || "",
+        { expiresIn: "7d" },
+      );
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax"),
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+    } catch (err) {
+      console.warn("Failed to issue auth token:", err?.message || err);
     }
 
     return res.status(200).json({

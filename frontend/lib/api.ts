@@ -37,11 +37,12 @@ async function getRequestAuthToken() {
 
 export async function getUserInfo(authToken?: string) {
   try {
+    const cookieStore = await cookies();
     const requestAuthToken = authToken ?? (await getRequestAuthToken());
     const res = await fetch(buildApiUrl("/api/user/me"), {
       method: "GET",
       credentials: "include",
-      headers: buildAuthHeaders(null, requestAuthToken ?? undefined, {
+      headers: buildAuthHeaders(cookieStore, requestAuthToken ?? undefined, {
         "Content-Type": "application/json",
       }),
       cache: "no-store",

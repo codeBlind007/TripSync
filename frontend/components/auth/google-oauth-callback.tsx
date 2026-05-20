@@ -13,7 +13,7 @@ export function GoogleOAuthCallback({
   title,
   description,
 }: GoogleOAuthCallbackProps) {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const syncStarted = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +26,13 @@ export function GoogleOAuthCallback({
 
     const syncUser = async () => {
       try {
+        const token = await getToken();
         const res = await fetch(buildClientApiUrl("/api/auth/oauth-callback"), {
           method: "POST",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
@@ -44,7 +46,7 @@ export function GoogleOAuthCallback({
     };
 
     void syncUser();
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, getToken]);
 
   return (
     <div className="bg-muted flex min-h-svh items-center justify-center p-6">
