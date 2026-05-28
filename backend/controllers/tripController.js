@@ -1085,6 +1085,8 @@ const joinTripByInviteLink = async (req, res, next) => {
   }
 };
 
+
+
 const tripController = {
   getAllUserTrips,
   createTrip,

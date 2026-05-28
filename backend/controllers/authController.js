@@ -67,6 +67,13 @@ const login = async (req, res, next) => {
       throw new AppError("User not found", 401);
     }
 
+    if (!user.password) {
+      throw new AppError(
+        "This account uses Google sign-in. Please continue with Google.",
+        401,
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new AppError("Invalid email or password", 401);
@@ -90,7 +97,7 @@ const login = async (req, res, next) => {
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax"),
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
     } catch (err) {
