@@ -82,6 +82,9 @@ router
   .route("/trips/:tripId/invite")
   .get(authMiddleware, tripController.generateInviteLink);
 
+router
+  .route("/trips/invite/:inviteCode")
+  .get(authMiddleware, tripController.getTripInvitePreview);
 
 // TripRoom routes
 router

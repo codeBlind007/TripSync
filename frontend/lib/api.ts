@@ -230,6 +230,29 @@ export async function getRoomCollab(tripId: string) {
   }
 }
 
+export async function getTripDetails(tripId: string) {
+  try {
+    const cookieStore = await cookies();
+    const res = await fetch(buildApiUrl(`/api/trips/${tripId}`), {
+      method: "GET",
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch trip details: ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    return data.data || null;
+  } catch (error) {
+    console.error("Error fetching trip details:", error);
+    return null;
+  }
+}
+
 export async function getReceivedInvitations() {
   try {
     const cookieStore = await cookies();

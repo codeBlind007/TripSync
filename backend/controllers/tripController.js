@@ -990,6 +990,49 @@ const editExpenses = async (req, res, next) => {
   }
 };
 
+const getTripInvitePreview = async (req, res, next) => {
+  try {
+    const clerkUserId = req.auth?.userId;
+    const userId = await getUserMongoId(clerkUserId, req.user?.email);
+    const { inviteCode } = req.params;
+
+    if (!inviteCode) {
+      throw new AppError("Invite code is required", 400);
+    }
+
+    const trip = await TripModel.findOne({
+      inviteCode,
+      inviteLinkEnabled: true,
+    }).populate({
+      path: "owner",
+      select: "name email",
+    });
+
+    if (!trip) {
+      throw new AppError("Invalid or expired invite link", 404);
+    }
+
+    const isAlreadyCollaborator = trip.collaborators.some(
+      (collaborator) => collaborator.toString() === userId.toString(),
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tripId: trip._id,
+        title: trip.title,
+        ownerName: trip.owner?.name || "Unknown owner",
+        collaboratorCount: trip.collaborators.length,
+        inviteCode: trip.inviteCode,
+        isAlreadyCollaborator,
+      },
+    });
+  } catch (error) {
+    console.error("getTripInvitePreview error:", error);
+    next(error);
+  }
+};
+
 const generateInviteLink = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
@@ -1055,8 +1098,7 @@ const joinTripByInviteLink = async (req, res, next) => {
       throw new AppError("Invalid or expired invite link", 404);
     }
 
-    const isOwner =
-      trip.owner.toString() === userId.toString();
+    const isOwner = trip.owner.toString() === userId.toString();
 
     const isAlreadyCollaborator = trip.collaborators.some(
       (c) => c.toString() === userId.toString(),
@@ -1085,8 +1127,6 @@ const joinTripByInviteLink = async (req, res, next) => {
   }
 };
 
-
-
 const tripController = {
   getAllUserTrips,
   createTrip,
@@ -1110,6 +1150,7 @@ const tripController = {
   getTripExpenses,
   addExpenses,
   editExpenses,
+  getTripInvitePreview,
   generateInviteLink,
   joinTripByInviteLink,
 };

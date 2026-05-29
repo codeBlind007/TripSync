@@ -8,11 +8,13 @@ export default function GoogleSignupPage() {
   const { fetchStatus, signUp } = useSignUp();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const redirectUrl = searchParams.get("redirect_url");
+  const invite = searchParams.get("invite");
 
   const redirectUrlComplete = useMemo(() => {
-    const invite = searchParams.get("invite");
+    if (redirectUrl) return redirectUrl;
     return invite ? `/dashboard?invite=${invite}` : "/dashboard";
-  }, [searchParams]);
+  }, [invite, redirectUrl]);
 
   useEffect(() => {
     const startGoogleSignup = async () => {

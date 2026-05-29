@@ -30,6 +30,7 @@ export function LoginForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("invite");
+  const redirectUrl = searchParams.get("redirect_url");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,7 +53,9 @@ export function LoginForm({
       const responseData = await res.json().catch(() => null);
       const isSuccessfulLogin = res.ok && responseData?.success !== false;
 
-      if (isSuccessfulLogin && token) {
+      if (isSuccessfulLogin && redirectUrl) {
+        router.replace(redirectUrl);
+      } else if (isSuccessfulLogin && token) {
         router.push(`/collaborators/${invitedTripId}`);
       } else if (isSuccessfulLogin) {
         router.replace("/dashboard");
@@ -67,6 +70,13 @@ export function LoginForm({
   };
 
   const handleGoogleSignIn = () => {
+    if (redirectUrl) {
+      router.push(
+        `/login/google?redirect_url=${encodeURIComponent(redirectUrl)}`,
+      );
+      return;
+    }
+
     router.push(token ? `/login/google?invite=${token}` : "/login/google");
   };
 

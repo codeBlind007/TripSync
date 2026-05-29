@@ -18,6 +18,7 @@ export function SignupForm({
 }: React.ComponentProps<"div">) {
   const searchParams = useSearchParams();
   const token = searchParams.get("invite");
+  const redirectUrl = searchParams.get("redirect_url");
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -44,7 +45,7 @@ export function SignupForm({
         },
       );
       if (res.ok) {
-        router.push("/dashboard");
+        router.push(redirectUrl || "/dashboard");
       } else {
         const errorData = await res.json();
         setError(errorData.message || "Signup failed. Please try again.");
@@ -57,6 +58,13 @@ export function SignupForm({
   };
 
   const handleGoogleSignUp = () => {
+    if (redirectUrl) {
+      router.push(
+        `/signup/google?redirect_url=${encodeURIComponent(redirectUrl)}`,
+      );
+      return;
+    }
+
     router.push(token ? `/signup/google?invite=${token}` : "/signup/google");
   };
 
