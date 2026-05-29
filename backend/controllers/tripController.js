@@ -1037,7 +1037,7 @@ const generateInviteLink = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
     const userId = await getUserMongoId(clerkUserId, req.user?.email);
-
+    const isProduction = process.env.NODE_ENV === "production";
     const { tripId } = req.params;
 
     if (!tripId) {
@@ -1064,7 +1064,7 @@ const generateInviteLink = async (req, res, next) => {
 
     await trip.save();
 
-    const inviteLink = `${process.env.FRONTEND_URL}/join/${trip.inviteCode}`;
+    const inviteLink = `${isProduction ? process.env.DEPLOYED_FRONTEND_URL : process.env.FRONTEND_URL}/join/${trip.inviteCode}`;
 
     return res.status(200).json({
       success: true,
