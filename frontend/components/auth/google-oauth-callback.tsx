@@ -14,14 +14,30 @@ export function GoogleOAuthCallback({
   title,
   description,
 }: GoogleOAuthCallbackProps) {
-  const { isLoaded } = useAuth();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const clerk = useClerk();
   const router = useRouter();
   const syncStarted = useRef(false);
+  const callbackHandled = useRef(false);
+  const redirectTarget = useRef<string>("/dashboard");
   const [error, setError] = useState<string | null>(null);
 
+  // 1. Process the OAuth callback URL
   useEffect(() => {
-    if (!isLoaded || syncStarted.current) {
+    if (!isLoaded || callbackHandled.current) return;
+
+    callbackHandled.current = true;
+    clerk.handleRedirectCallback({}, async (to) => {
+      if (to) redirectTarget.current = to;
+    }).catch((err) => {
+      console.error("Error processing OAuth callback:", err);
+      setError("Failed to process Google sign-in callback.");
+    });
+  }, [isLoaded, clerk]);
+
+  // 2. Sync the user once signed in
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || syncStarted.current) {
       return;
     }
 
@@ -29,13 +45,7 @@ export function GoogleOAuthCallback({
 
     const syncUser = async () => {
       try {
-        let redirectTarget = "/dashboard";
-
-        await clerk.handleRedirectCallback({}, async (to) => {
-          redirectTarget = to || "/dashboard";
-        });
-
-        const token = await clerk.session?.getToken();
+        const token = await getToken();
         const res = await fetch(buildClientApiUrl("/api/auth/oauth-callback"), {
           method: "POST",
           credentials: "include",
@@ -46,10 +56,10 @@ export function GoogleOAuthCallback({
         });
 
         if (!res.ok) {
-          throw new Error("Failed to sync Google account");
+          throw new Error(`Failed to sync Google account: ${res.statusText}`);
         }
 
-        router.push(redirectTarget);
+        router.push(redirectTarget.current);
       } catch (err) {
         console.error("Google account sync failed:", err);
         setError("Google sign-in completed, but account sync failed. Please refresh or try logging in again.");
@@ -57,7 +67,7 @@ export function GoogleOAuthCallback({
     };
 
     void syncUser();
-  }, [isLoaded, clerk, router]);
+  }, [isLoaded, isSignedIn, getToken, router]);
 
   return (
     <div className="bg-muted flex min-h-svh items-center justify-center p-6">
