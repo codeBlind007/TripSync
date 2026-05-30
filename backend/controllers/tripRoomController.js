@@ -9,10 +9,12 @@ const normalizeMessage = (message) => {
 
   const timestampValue =
     message.timestamp ?? message.timeStamp ?? message.createdAt ?? Date.now();
+  const text = message.text ?? message.message ?? "";
 
   return {
     ...message,
     sender,
+    text,
     timestamp: new Date(timestampValue),
     createdAt: message.createdAt
       ? new Date(message.createdAt)
@@ -71,7 +73,7 @@ const getTripRoomMessage = async (req, res) => {
             ? String(message.sender._id)
             : "";
           const timeValue = new Date(message.timestamp).getTime();
-          const dedupeKey = `${senderId}|${message.text}|${timeValue}`;
+          const dedupeKey = `${senderId}|${message.text ?? message.message ?? ""}|${timeValue}`;
           return [dedupeKey, message];
         }),
       ).values(),

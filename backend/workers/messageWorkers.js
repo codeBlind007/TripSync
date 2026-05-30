@@ -5,7 +5,9 @@ import { dirname, resolve } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: resolve(__dirname, "../.env") });
+dotenv.config({
+  path: resolve(__dirname, "../.env"),
+});
 
 import { Worker } from "bullmq";
 import Message from "../models/TripRooms.js";
@@ -30,63 +32,121 @@ const parseWorkerMessage = (value) => {
 
 await connectDB();
 
-console.log("worker started");
+console.log("Worker started");
 
 new Worker(
   "messageQueue",
   async (job) => {
     const { tripId } = job.data;
 
-    console.log("Processing trip:", tripId);
-
     const redisKey = `trip:${tripId}:messages`;
+    const processingKey = `${redisKey}:processing`;
 
-    const messages = await connection.lrange(redisKey, 0, -1);
-
-    await connection.del(redisKey);
-
-    if (!messages.length) return;
-
-    const docs = messages
-      .map((m) => {
-        const parsed = parseWorkerMessage(m);
-
-        if (!parsed) {
-          return null;
-        }
-
-        const senderId =
-          typeof parsed.sender === "object"
-            ? parsed.sender?._id
-            : parsed.sender;
-        const timestampValue =
-          parsed.timestamp ?? parsed.timeStamp ?? Date.now();
-
-        console.log(parsed);
-        return {
-          tripId,
-          sender: senderId,
-          text: parsed.text,
-          timestamp: new Date(timestampValue),
-        };
-      })
-      .filter(Boolean);
+    console.log(`Processing trip ${tripId}`);
 
     try {
-      if (docs.length) {
-        await Message.insertMany(docs);
-        console.log(`Inserted ${docs.length} messages for trip ${tripId}`);
-      } else {
-        console.log(`No docs to insert for trip ${tripId}`);
+      const exists = await connection.exists(redisKey);
+
+      if (!exists) {
+        console.log(
+          `No pending messages for trip ${tripId}`
+        );
+        return;
+      }
+
+      /**
+       * Move current batch to processing key.
+       *
+       * Any new messages arriving after this point
+       * will go into the original redisKey and won't
+       * be lost.
+       */
+      await connection.rename(redisKey, processingKey);
+
+      const messages = await connection.lrange(
+        processingKey,
+        0,
+        -1
+      );
+
+      if (!messages.length) {
+        await connection.del(processingKey);
+        return;
+      }
+
+      const docs = messages
+        .map((msg) => {
+          const parsed = parseWorkerMessage(msg);
+
+          if (!parsed) return null;
+
+          return {
+            tripId,
+            sender:
+              typeof parsed.sender === "object"
+                ? parsed.sender._id
+                : parsed.sender,
+            text: parsed.text,
+            timestamp: new Date(
+              parsed.timestamp || Date.now()
+            ),
+          };
+        })
+        .filter(Boolean);
+
+      if (!docs.length) {
+        await connection.del(processingKey);
+        return;
+      }
+
+      await Message.insertMany(docs);
+
+      console.log(
+        `Inserted ${docs.length} messages for trip ${tripId}`
+      );
+
+      await connection.del(processingKey);
+
+      /**
+       * IMPORTANT
+       *
+       * Messages may have arrived while we were
+       * inserting to MongoDB.
+       *
+       * If so, schedule another flush.
+       */
+      const remaining = await connection.llen(redisKey);
+
+      if (remaining > 0) {
+        await job.queue.add(
+          "flush-tripRoom-messages",
+          { tripId },
+          {
+            jobId: `trip-${tripId}`,
+            delay: 2 * 60 * 1000,
+            removeOnComplete: true,
+          }
+        );
+
+        console.log(
+          `Rescheduled flush for ${remaining} new messages`
+        );
       }
     } catch (err) {
-      console.error("Failed to insert messages:", err, "docs:", docs);
+      console.error(
+        `Worker failed for trip ${tripId}:`,
+        err
+      );
+
+      try {
+        await connection.del(processingKey);
+      } catch (_) {}
     }
   },
   {
     connection,
     concurrency: 5,
-  },
+  }
 );
 
-console.log("worker done the job");
+console.log("Worker ready");

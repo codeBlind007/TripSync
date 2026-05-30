@@ -46,7 +46,7 @@ export default async function TripChat({
   const collab = await getRoomCollab(awaitedParams.tripId);
   const isCompleted = awaitedSearchParams.isCompleted === "true";
   return (
-    <div className="p-4">
+    <div className="h-[100dvh] overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] px-2 py-2 sm:px-4 sm:py-4 lg:px-6">
       <TripRoom
         tripId={awaitedParams.tripId}
         userDetails={userDetails}

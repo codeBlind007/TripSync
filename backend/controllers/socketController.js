@@ -24,81 +24,75 @@ export const socketController = (io) => {
     console.log("User connected");
     console.log("Id:", socket.id);
 
-    // Emit a welcome message to the new socket
-    socket.emit("welcome", { message: "Welcome to the TripSync" });
-
-    // Handle message events
-    socket.on("message", async (data) => {
-      console.log(data);
-      const { tripId, sender, text } = data;
-
-      io.to(tripId).emit("recieve-msg", {
-        text,
-        tripId,
-        sender,
-      });
-
-      const redisKey = `trip:${tripId}:messages`;
-
-      const payload = JSON.stringify({
-        tripId,
-        sender: {
-          _id: sender._id,
-          name: sender.name,
-          email: sender.email,
-        },
-        text,
-        timestamp: Date.now(),
-      });
-
-      await redis.rpush(redisKey, payload);
-
-      const messages = await redis.lrange(redisKey, 0, -1);
-      const parsed = messages.map((m) => normalizeRedisMessage(m));
-
-      console.log("msg from redis: ", parsed);
-
-      const ttl = await redis.ttl(redisKey);
-      if (ttl === -1) {
-        await redis.expire(redisKey, 3600);
-      }
-      await messageQueue.retryJobs({ state: "failed" });
-      await messageQueue.add(
-        "flush-tripRoom-messages",
-        { tripId },
-        {
-          jobId: `trip-${tripId}`,
-          removeOnComplete: true,
-        },
-      );
-
-      const counts = await messageQueue.getJobCounts();
-      console.log(counts);
-
-      const failedJobs = await messageQueue.getFailed();
-
-      for (const job of failedJobs) {
-        console.log({
-          id: job.id,
-          name: job.name,
-          data: job.data,
-          failedReason: job.failedReason,
-        });
-      }
-
-      const jobs = await messageQueue.getWaiting();
-      jobs.forEach((job) => {
-        console.log(job.id, job.name, job.data);
-      });
+    socket.emit("welcome", {
+      message: "Welcome to TripSync",
     });
 
-    // Handle joining a room
+    socket.on("message", async (data) => {
+      try {
+        const { tripId, sender, text } = data;
+
+        // Real-time delivery
+        io.to(tripId).emit("receive-msg", {
+          text,
+          tripId,
+          sender,
+        });
+
+        const redisKey = `trip:${tripId}:messages`;
+
+        const payload = JSON.stringify({
+          tripId,
+          sender: {
+            _id: sender._id,
+            name: sender.name,
+            email: sender.email,
+          },
+          text,
+          timestamp: Date.now(),
+        });
+
+        // Store in Redis
+        await redis.rpush(redisKey, payload);
+
+        // Optional TTL
+        const ttl = await redis.ttl(redisKey);
+
+        if (ttl === -1) {
+          await redis.expire(redisKey, 3600);
+        }
+
+        // Create only ONE delayed flush job per trip
+        const jobId = `trip-${tripId}`;
+
+        const existingJob = await messageQueue.getJob(jobId);
+
+        if (!existingJob) {
+          await messageQueue.add(
+            "flush-tripRoom-messages",
+            { tripId },
+            {
+              jobId,
+              delay: 2 * 60 * 1000, // 2 minutes
+              removeOnComplete: true,
+              removeOnFail: false,
+            }
+          );
+
+          console.log(
+            `Scheduled flush job for trip ${tripId}`
+          );
+        }
+      } catch (err) {
+        console.error("Socket message error:", err);
+      }
+    });
+
     socket.on("join-room", (room) => {
       socket.join(room);
       console.log(`${socket.id} joined room: ${room}`);
     });
 
-    // Optional: Handle disconnection
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
     });

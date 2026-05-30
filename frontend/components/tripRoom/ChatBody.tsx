@@ -13,7 +13,6 @@ interface Sender {
   email: string;
 }
 
-
 interface Props {
   messages: Message[];
   userId: string;
@@ -27,10 +26,10 @@ const ChatBody = ({ messages, userId }: Props) => {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-0 flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 to-slate-100 px-3 py-4 [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex min-h-[40vh] flex-col items-center justify-center text-gray-400">
             <Users size={48} className="mb-3 opacity-50" />
             <p className="text-sm">No messages yet. Start the conversation!</p>
           </div>
@@ -48,6 +47,5 @@ const ChatBody = ({ messages, userId }: Props) => {
     </div>
   );
 };
-
 
 export default ChatBody;

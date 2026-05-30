@@ -112,7 +112,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const isOverdue = daysUntilTrip < 0;
 
   const collaboratorsCount = trip.collaborators?.length || 0;
-  const totalParticipants = collaboratorsCount + 1; // +1 for owner
+  const totalParticipants = collaboratorsCount; // +1 for owner
   const tasksCount = trip.tasks?.length || 0;
   const completedTasksCount =
     trip.tasks?.filter((task) => task.completed).length || 0;

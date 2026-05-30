@@ -31,6 +31,18 @@ interface Message {
   timestamp: Date;
 }
 
+const normalizeMessage = (message: Partial<Message> & { message?: string }) => {
+  const timestamp = message.timestamp
+    ? new Date(message.timestamp)
+    : new Date();
+
+  return {
+    sender: message.sender as Sender,
+    text: message.text ?? message.message ?? "",
+    timestamp,
+  };
+};
+
 interface TripRoomProps {
   tripId: string;
   userDetails: User;
@@ -46,27 +58,29 @@ const TripRoom = ({
   roomCollab,
   isCompleted,
 }: TripRoomProps) => {
-  const [messages, setMessages] = useState<Message[]>(chatMessage);
+  const [messages, setMessages] = useState<Message[]>(
+    chatMessage.map((message) => normalizeMessage(message)),
+  );
   useEffect(() => {
     if (!socket.connected) {
       socket.connect();
     }
     socket.emit("join-room", tripId);
 
-    const handleReceive = (data: Message) => {
-      const normalizedMessage: Message = {
-        text: data.text,
-        timestamp: new Date(),
+    const handleReceive = (data: Message & { message?: string }) => {
+      const normalizedMessage = normalizeMessage({
         sender: data.sender,
-      };
+        text: data.text ?? data.message,
+        timestamp: data.timestamp ?? new Date(),
+      });
 
       setMessages((prev) => [...prev, normalizedMessage]);
     };
 
-    socket.on("recieve-msg", handleReceive);
+    socket.on("receive-msg", handleReceive);
 
     return () => {
-      socket.off("recieve-msg", handleReceive);
+      socket.off("receive-msg", handleReceive);
       socket.disconnect();
     };
   }, [tripId]);
@@ -82,10 +96,10 @@ const TripRoom = ({
   };
 
   return (
-    <div className="flex h-[calc(100dvh-6rem)] min-h-[28rem] flex-col overflow-hidden rounded-xl border border-gray-200 bg-gray-100 md:h-[calc(100dvh-3rem)] md:flex-row">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_70px_rgba(15,23,42,0.12)] ring-1 ring-black/5 md:flex-row">
       <CollaboratorsSidebar collaborators={roomCollab} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50">
         <ChatHeader
           memberCount={roomCollab.length}
           collaborators={roomCollab}
