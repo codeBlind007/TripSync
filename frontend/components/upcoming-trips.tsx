@@ -47,7 +47,8 @@ export type Task = {
 };
 
 export type Expense = {
-  amount: number;
+  amount?: number;
+  totalAmount?: number;
   category?: string;
   spentBy?: string;
   sharedWith?: string[];
@@ -117,7 +118,11 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const completedTasksCount =
     trip.tasks?.filter((task) => task.completed).length || 0;
   const expensesTotal =
-    trip.expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+    trip.expenses?.reduce((sum, expense) => {
+      // support new Expense model (totalAmount) and legacy (amount)
+      const val = (expense as any).totalAmount ?? (expense as any).amount ?? 0;
+      return sum + val;
+    }, 0) || 0;
   const itineraryDays = trip.itinerary?.length || 0;
   const pendingInvitesCount =
     trip.pendingInvites?.filter((invite) => invite.status === "pending")

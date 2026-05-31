@@ -12,7 +12,7 @@ import {
   MessageCircle,
   ChevronRight,
   CalendarDays,
-  ChevronLeft
+  ChevronLeft,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -49,7 +49,13 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const completedTasksCount =
     trip.tasks?.filter((task) => task.completed).length || 0;
   const expensesTotal =
-    trip.expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+    trip.expenses?.reduce((sum, expense) => {
+      const val =
+        (expense as { totalAmount?: number; amount?: number }).totalAmount ??
+        (expense as { totalAmount?: number; amount?: number }).amount ??
+        0;
+      return sum + val;
+    }, 0) || 0;
   const itineraryDays = trip.itinerary?.length || 0;
 
   const pendingInvitesCount =
@@ -329,14 +335,14 @@ const TripCard = ({ trip }: { trip: Trip }) => {
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
-      </CardContent>      
+      </CardContent>
     </Card>
   );
 };
 
 const OngoingTrips = ({ ongoingTrips }: OngoingProps) => {
-  console.log(ongoingTrips)
- 
+  console.log(ongoingTrips);
+
   const router = useRouter();
   return (
     <div className="space-y-8 mt-8 px-6 py-1 max-w-7xl mx-auto">
@@ -345,7 +351,7 @@ const OngoingTrips = ({ ongoingTrips }: OngoingProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push("/dashboard")}
             className="rounded-full hover:bg-white hover:shadow-sm cursor-pointer"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -356,11 +362,11 @@ const OngoingTrips = ({ ongoingTrips }: OngoingProps) => {
         </div>
       </div>
       <p className="text-gray-600 -mt-4">
-            {ongoingTrips.length > 0
-              ? `You have ${ongoingTrips.length} upcoming ${
-                  ongoingTrips.length === 1 ? "trip" : "trips"
-                }`
-              : "No upcoming trips planned"}
+        {ongoingTrips.length > 0
+          ? `You have ${ongoingTrips.length} upcoming ${
+              ongoingTrips.length === 1 ? "trip" : "trips"
+            }`
+          : "No upcoming trips planned"}
       </p>
 
       {ongoingTrips.length === 0 ? (
@@ -379,7 +385,7 @@ const OngoingTrips = ({ ongoingTrips }: OngoingProps) => {
             <Button
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
-              onClick={() => router.replace('/dashboard/create-trip')}
+              onClick={() => router.replace("/dashboard/create-trip")}
             >
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Trip

@@ -1,5 +1,6 @@
 "use client";
-import { useState, useMemo } from "react";
+
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -14,32 +15,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Receipt } from "lucide-react";
 
-// Import sub-components
 import { ExpenseSummaryCards } from "./ExpenseSummaryCards";
 import { ExpenseFilters } from "./ExpenseFilters";
-import { ExpenseTableRow } from "./ExpenseTableRow";
-import { ExpenseMobileCard } from "./ExpenseMobileCard";
+import { ExpenseTableRow } from "@/components/expenses/ExpenseTableRow";
+import { ExpenseMobileCard } from "@/components/expenses/ExpenseMobileCard";
 import { EmptyState } from "./EmptyState";
 import { ErrorState } from "./ErrorState";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { getCategoryBadgeVariant, getCategoryIcon } from "@/lib/expenseUtils";
 import { formatAmount } from "@/lib/currencyConfig";
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Expense {
-  _id: string;
-  amount: number;
-  category: string;
-  spentBy: User;
-  sharedWith: User[];
-  note: string;
-  date: string;
-}
+import {
+  getExpenseParticipants,
+  getExpenseSearchText,
+} from "@/lib/expenseDisplay";
+import { Expense } from "@/types";
 
 interface PageProps {
   tripId: string;
@@ -53,19 +42,27 @@ export default function ExpenseList({
   isCompleted,
 }: PageProps) {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("date-desc");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
+  const [expandedExpenseId, setExpandedExpenseId] = useState<string | null>(
+    null,
+  );
   const router = useRouter();
 
   const fetchExpenses = async () => {
     setLoading(true);
     setError(null);
+
     try {
       const res = await fetch(`/api/trips/${tripId}/expenses`);
-      if (!res.ok) throw new Error("Failed to fetch expenses");
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch expenses");
+      }
+
       const data = await res.json();
       setExpenses(data.data);
     } catch (err) {
@@ -77,16 +74,18 @@ export default function ExpenseList({
     }
   };
 
-  // Filter and sort expenses
   const filteredAndSortedExpenses = useMemo(() => {
+    const normalizedSearch = searchTerm.toLowerCase().trim();
+
     return expenses
       .filter((expense) => {
         const matchesSearch =
-          expense.note.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          expense.spentBy.name.toLowerCase().includes(searchTerm.toLowerCase());
+          normalizedSearch.length === 0 ||
+          getExpenseSearchText(expense).includes(normalizedSearch);
         const matchesCategory =
           categoryFilter === "all" ||
           expense.category.toLowerCase() === categoryFilter.toLowerCase();
+
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
@@ -96,26 +95,52 @@ export default function ExpenseList({
           case "date-asc":
             return new Date(a.date).getTime() - new Date(b.date).getTime();
           case "amount-desc":
-            return b.amount - a.amount;
+            return b.totalAmount - a.totalAmount;
           case "amount-asc":
-            return a.amount - b.amount;
+            return a.totalAmount - b.totalAmount;
           default:
             return 0;
         }
       });
   }, [expenses, searchTerm, categoryFilter, sortBy]);
 
-  // Calculate summary stats
   const { totalAmount, uniqueCategories, averageExpense } = useMemo(() => {
-    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const unique = [...new Set(expenses.map((e) => e.category))];
+    const total = expenses.reduce(
+      (sum, expense) => sum + expense.totalAmount,
+      0,
+    );
+    const unique = [...new Set(expenses.map((expense) => expense.category))];
     const average = expenses.length > 0 ? total / expenses.length : 0;
+
     return {
       totalAmount: total,
       uniqueCategories: unique,
       averageExpense: average,
     };
   }, [expenses]);
+
+  const { displayedTotalAmount, displayedParticipantCount } = useMemo(() => {
+    const total = filteredAndSortedExpenses.reduce(
+      (sum, expense) => sum + expense.totalAmount,
+      0,
+    );
+    const participantIds = new Set<string>();
+
+    filteredAndSortedExpenses.forEach((expense) => {
+      getExpenseParticipants(expense).forEach((participant) => {
+        participantIds.add(
+          participant.user._id ||
+            participant.user.email ||
+            participant.user.name,
+        );
+      });
+    });
+
+    return {
+      displayedTotalAmount: total,
+      displayedParticipantCount: participantIds.size,
+    };
+  }, [filteredAndSortedExpenses]);
 
   const handleAddExpense = () => {
     router.push(`/expenses/add-expenses/${tripId}`);
@@ -126,13 +151,18 @@ export default function ExpenseList({
     setCategoryFilter("all");
   };
 
+  const handleToggleExpense = (expenseId: string) => {
+    setExpandedExpenseId((current) =>
+      current === expenseId ? null : expenseId,
+    );
+  };
+
   if (error) {
     return <ErrorState error={error} onRetry={fetchExpenses} />;
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6">
-      {/* Summary Cards */}
+    <div className="mx-auto w-full max-w-6xl space-y-6">
       {!loading && expenses.length > 0 && (
         <ExpenseSummaryCards
           totalAmount={totalAmount}
@@ -141,25 +171,24 @@ export default function ExpenseList({
         />
       )}
 
-      {/* Main Expenses Card */}
       <Card className="w-full">
         <CardHeader className="border-b bg-gray-50/50">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
                 <Receipt className="h-5 w-5" />
                 Trip Expenses
               </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Track and manage all your travel expenses
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               {!isCompleted && (
                 <Button
                   size="sm"
                   onClick={handleAddExpense}
-                  className="gap-2 bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                  className="cursor-pointer gap-2 bg-blue-600 hover:bg-blue-700"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add Expense
@@ -170,7 +199,6 @@ export default function ExpenseList({
         </CardHeader>
 
         <CardContent className="p-6">
-          {/* Filters and Search */}
           {!loading && expenses.length > 0 && (
             <ExpenseFilters
               searchTerm={searchTerm}
@@ -197,8 +225,7 @@ export default function ExpenseList({
             />
           ) : (
             <div className="space-y-4">
-              {/* Mobile-friendly cards for small screens */}
-              <div className="block md:hidden space-y-3">
+              <div className="block space-y-3 md:hidden">
                 {filteredAndSortedExpenses.map((expense) => (
                   <ExpenseMobileCard
                     key={expense._id}
@@ -209,24 +236,27 @@ export default function ExpenseList({
                 ))}
               </div>
 
-              {/* Desktop table */}
               <div className="hidden md:block">
                 <Table>
                   <TableCaption className="text-left text-gray-600 mb-4">
-                    {filteredAndSortedExpenses.length} expense
-                    {filteredAndSortedExpenses.length !== 1 ? "s" : ""}• Total:{" "}
-                    {formatAmount(totalAmount)}
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium text-gray-900">
+                        {filteredAndSortedExpenses.length} Expenses
+                      </span>
+                      <span>
+                        Total Spend: {formatAmount(displayedTotalAmount)}
+                      </span>
+                      <span>{displayedParticipantCount} Participants</span>
+                    </div>
                   </TableCaption>
                   <TableHeader>
                     <TableRow className="bg-gray-50/50">
                       <TableHead className="font-semibold">Date</TableHead>
+                      <TableHead className="font-semibold">Expense</TableHead>
                       <TableHead className="font-semibold">Category</TableHead>
+                      <TableHead className="font-semibold">Payers</TableHead>
                       <TableHead className="font-semibold">
-                        Description
-                      </TableHead>
-                      <TableHead className="font-semibold">Paid by</TableHead>
-                      <TableHead className="font-semibold">
-                        Shared with
+                        Participants
                       </TableHead>
                       <TableHead className="text-right font-semibold">
                         Amount
@@ -239,6 +269,8 @@ export default function ExpenseList({
                         key={expense._id}
                         expense={expense}
                         index={index}
+                        isExpanded={expandedExpenseId === expense._id}
+                        onToggleDetails={handleToggleExpense}
                         getCategoryBadgeVariant={getCategoryBadgeVariant}
                         getCategoryIcon={getCategoryIcon}
                       />

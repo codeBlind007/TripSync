@@ -7,9 +7,8 @@ import { sendInvitationEmail } from "./invitationController.js";
 import { randomBytes } from "crypto";
 import crypto from "crypto";
 import AppError from "../utils/AppError.js";
+import ExpenseModel from "../models/Expenses.js";
 
-// Helper to resolve an authenticated user to a MongoDB user ID.
-// Accepts a Clerk ID, a MongoDB _id, or an email fallback.
 const getUserMongoId = async (identifier, email) => {
   // Try direct MongoDB _id lookup when the identifier looks like an ObjectId
   if (identifier && mongoose.Types.ObjectId.isValid(identifier)) {
@@ -841,33 +840,41 @@ const getTripExpenses = async (req, res, next) => {
     const trip = await TripModel.findOne({
       _id: tripId,
       $or: [{ owner: userId }, { collaborators: userId }],
-    }).populate([
-      {
-        path: "expenses.spentBy",
-        model: "User",
-        select: "name email",
-      },
-      {
-        path: "expenses.sharedWith",
-        model: "User",
-        select: "name email",
-      },
-    ]);
+    });
 
     if (!trip) {
       throw new AppError("Trip not found or access denied", 404);
     }
 
-    if (trip.expenses.length > 0) {
+    const expenses = await ExpenseModel.find({ tripId })
+      .populate({
+        path: "createdBy",
+        model: "User",
+        select: "name email",
+      })
+      .populate({
+        path: "participants.user",
+        model: "User",
+        select: "name email",
+      })
+      .populate({
+        path: "payments.user",
+        model: "User",
+        select: "name email",
+      })
+      .sort({ date: -1, _id: -1 });
+
+    if (expenses.length > 0) {
       return res.status(200).json({
-        sucess: true,
-        results: trip.expenses.length,
-        data: trip.expenses,
+        success: true,
+        results: expenses.length,
+        data: expenses,
       });
     } else {
       return res.status(200).json({
-        sucess: true,
+        success: true,
         message: "No expenses added for this trip.",
+        data: [],
       });
     }
   } catch (error) {
@@ -881,7 +888,7 @@ const addExpenses = async (req, res, next) => {
     const { tripId } = req.params;
     const clerkUserId = req.auth?.userId;
     const userId = await getUserMongoId(clerkUserId, req.user?.email);
-    const { amount, category, spentBy, sharedWith, note, date } =
+    const { title, totalAmount, category, note, participants, payments, date } =
       req.validatedData;
 
     if (!tripId) {
@@ -911,21 +918,23 @@ const addExpenses = async (req, res, next) => {
     }
 
     const newExpense = {
-      amount: amount,
-      category: category,
-      spentBy: spentBy,
-      sharedWith: sharedWith || null,
-      note: note,
+      tripId,
+      title,
+      totalAmount,
+      category,
+      note,
+      createdBy: userId,
+      participants,
+      payments,
       date: date,
     };
 
-    trip.expenses.push(newExpense);
-    await trip.save();
+    const createdExpense = await ExpenseModel.create(newExpense);
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "Expense added successfully.",
-      data: newExpense,
+      data: createdExpense,
     });
   } catch (error) {
     console.error("Add Expense Error:", error.message);
@@ -938,16 +947,26 @@ const editExpenses = async (req, res, next) => {
     const { tripId, expenseId } = req.params;
     const clerkUserId = req.auth?.userId;
     const userId = await getUserMongoId(clerkUserId, req.user?.email);
-    const { amount, category, spentBy, sharedWith, note, date } = req.body;
+    const { title, totalAmount, category, note, participants, payments, date } =
+      req.body;
 
     if (!tripId || !expenseId) {
       throw new AppError("Trip ID and Expense ID are required", 400);
     }
 
-    const trip = await TripModel.findOne({ _id: tripId, owner: userId });
+    const trip = await TripModel.findOne({
+      _id: tripId,
+      $or: [{ owner: userId }, { collaborators: userId }],
+    });
 
     if (!trip) {
       throw new AppError("Trip not found or access denied", 404);
+    }
+
+    const expense = await ExpenseModel.findOne({ _id: expenseId, tripId });
+
+    if (!expense) {
+      throw new AppError("Expense not found", 404);
     }
 
     const startDate = trip.startDate;
@@ -963,26 +982,37 @@ const editExpenses = async (req, res, next) => {
       );
     }
 
-    const expense = trip.expenses.find((e) => e._id.toString() === expenseId);
-
-    if (!expense) {
-      throw new AppError("Expense not found", 404);
-    }
-
-    // Update fields if provided
-    if (amount !== undefined) expense.amount = amount;
+    if (title !== undefined) expense.title = title;
+    if (totalAmount !== undefined) expense.totalAmount = totalAmount;
     if (category !== undefined) expense.category = category;
-    if (spentBy !== undefined) expense.spentBy = spentBy;
-    if (sharedWith !== undefined) expense.sharedWith = sharedWith;
     if (note !== undefined) expense.note = note;
+    if (participants !== undefined) expense.participants = participants;
+    if (payments !== undefined) expense.payments = payments;
     if (date !== undefined) expense.date = date;
 
-    await trip.save();
+    await expense.save();
+
+    const updatedExpense = await ExpenseModel.findById(expense._id)
+      .populate({
+        path: "createdBy",
+        model: "User",
+        select: "name email",
+      })
+      .populate({
+        path: "participants.user",
+        model: "User",
+        select: "name email",
+      })
+      .populate({
+        path: "payments.user",
+        model: "User",
+        select: "name email",
+      });
 
     return res.status(200).json({
       success: true,
       message: "Expense updated successfully.",
-      updatedExpense: expense,
+      data: updatedExpense,
     });
   } catch (error) {
     console.error("Edit expense error:", error);
@@ -1108,7 +1138,7 @@ const joinTripByInviteLink = async (req, res, next) => {
       return res.status(200).json({
         success: true,
         message: "Already joined this trip",
-        trip,
+        data: trip,
       });
     }
 
@@ -1119,7 +1149,7 @@ const joinTripByInviteLink = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Successfully joined the trip",
-      trip,
+      data: trip,
     });
   } catch (error) {
     console.error("joinTripByInviteLink error:", error);

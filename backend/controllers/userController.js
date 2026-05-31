@@ -2,6 +2,7 @@ import express from "express";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import TripModel from "../models/Trips.js";
+import ExpenseModel from "../models/Expenses.js";
 import { clerkClient } from "@clerk/express";
 
 const getAllUsers = async (req, res, next) => {
@@ -133,7 +134,31 @@ const upComingTrips = async (req, res, next) => {
           startDate: { $gte: new Date() },
         },
       ],
-    }).populate("collaborators", "name email");
+    })
+      .select("-expenses")
+      .populate("collaborators", "name email");
+
+    // attach expense totals from separate Expenses collection
+    try {
+      const tripIds = upComingTrips.map((t) => t._id);
+      const totals = await ExpenseModel.aggregate([
+        { $match: { tripId: { $in: tripIds } } },
+        {
+          $group: {
+            _id: "$tripId",
+            total: { $sum: { $ifNull: ["$totalAmount", "$amount"] } },
+          },
+        },
+      ]);
+      const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
+      upComingTrips.forEach((trip) => {
+        const total = totalsMap.get(String(trip._id)) || 0;
+        trip.expenses = [{ amount: total }];
+      });
+    } catch (e) {
+      // don't fail the whole request if expense aggregation fails
+      console.error("attach expenses error:", e?.message || e);
+    }
 
     if (!upComingTrips) {
       return res.status(400).json({
@@ -166,7 +191,30 @@ const ongoingTrips = async (req, res, next) => {
         { startDate: { $lte: new Date() } },
         { endDate: { $gt: new Date() } },
       ],
-    }).populate("collaborators", "name email");
+    })
+      .select("-expenses")
+      .populate("collaborators", "name email");
+
+    // attach expense totals
+    try {
+      const tripIds = trips.map((t) => t._id);
+      const totals = await ExpenseModel.aggregate([
+        { $match: { tripId: { $in: tripIds } } },
+        {
+          $group: {
+            _id: "$tripId",
+            total: { $sum: { $ifNull: ["$totalAmount", "$amount"] } },
+          },
+        },
+      ]);
+      const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
+      trips.forEach((trip) => {
+        const total = totalsMap.get(String(trip._id)) || 0;
+        trip.expenses = [{ amount: total }];
+      });
+    } catch (e) {
+      console.error("attach expenses error:", e?.message || e);
+    }
 
     if (!trips.length) {
       return res.json({
@@ -204,9 +252,31 @@ const upComingTripsDashboard = async (req, res, next) => {
         },
       ],
     })
+      .select("-expenses")
       .populate("collaborators", "name email")
       .sort({ startDate: 1 })
       .limit(3);
+
+    // attach expense totals
+    try {
+      const tripIds = upComingTrips.map((t) => t._id);
+      const totals = await ExpenseModel.aggregate([
+        { $match: { tripId: { $in: tripIds } } },
+        {
+          $group: {
+            _id: "$tripId",
+            total: { $sum: { $ifNull: ["$totalAmount", "$amount"] } },
+          },
+        },
+      ]);
+      const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
+      upComingTrips.forEach((trip) => {
+        const total = totalsMap.get(String(trip._id)) || 0;
+        trip.expenses = [{ amount: total }];
+      });
+    } catch (e) {
+      console.error("attach expenses error:", e?.message || e);
+    }
 
     if (!upComingTrips) {
       return res.status(400).json({
@@ -242,7 +312,30 @@ const completedTrips = async (req, res, next) => {
           endDate: { $lte: new Date() },
         },
       ],
-    }).populate("collaborators", "name email");
+    })
+      .select("-expenses")
+      .populate("collaborators", "name email");
+
+    // attach expense totals
+    try {
+      const tripIds = completedTrips.map((t) => t._id);
+      const totals = await ExpenseModel.aggregate([
+        { $match: { tripId: { $in: tripIds } } },
+        {
+          $group: {
+            _id: "$tripId",
+            total: { $sum: { $ifNull: ["$totalAmount", "$amount"] } },
+          },
+        },
+      ]);
+      const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
+      completedTrips.forEach((trip) => {
+        const total = totalsMap.get(String(trip._id)) || 0;
+        trip.expenses = [{ amount: total }];
+      });
+    } catch (e) {
+      console.error("attach expenses error:", e?.message || e);
+    }
 
     if (!completedTrips) {
       return res.status(400).json({
@@ -279,8 +372,30 @@ const completedTripsDashboard = async (req, res, next) => {
         },
       ],
     })
+      .select("-expenses")
       .sort({ endDate: -1 })
       .limit(3);
+
+    // attach expense totals
+    try {
+      const tripIds = completedTrips.map((t) => t._id);
+      const totals = await ExpenseModel.aggregate([
+        { $match: { tripId: { $in: tripIds } } },
+        {
+          $group: {
+            _id: "$tripId",
+            total: { $sum: { $ifNull: ["$totalAmount", "$amount"] } },
+          },
+        },
+      ]);
+      const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
+      completedTrips.forEach((trip) => {
+        const total = totalsMap.get(String(trip._id)) || 0;
+        trip.expenses = [{ amount: total }];
+      });
+    } catch (e) {
+      console.error("attach expenses error:", e?.message || e);
+    }
 
     if (!completedTrips) {
       return res.status(400).json({
@@ -309,7 +424,7 @@ const allUserTrips = async (req, res, next) => {
     const userId = await getUserMongoId(clerkUserId, req.user?.email);
     const allTrips = await TripModel.find({
       $or: [{ owner: userId }, { collaborators: userId }],
-    });
+    }).select("-expenses");
 
     if (!allTrips || allTrips.length === 0) {
       return res.status(400).json({
@@ -421,10 +536,10 @@ export const getUserInfo = async (req, res, next) => {
 const userController = {
   getAllUsers,
   respondToInvite,
-  upComingTrips,
-  completedTrips,
   getUserInfo,
   allUserTrips,
+  upComingTrips,
+  completedTrips,
   upComingTripsDashboard,
   completedTripsDashboard,
   ongoingTrips,

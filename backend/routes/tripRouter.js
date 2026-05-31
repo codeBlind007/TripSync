@@ -7,7 +7,7 @@ import {
   createTripValidation,
   addItineraryActivitiesValidation,
   addTaskValidation,
-  addExpensesValidation,
+  addExpenseValidation,
 } from "../middlewares/tripValidation.js";
 
 import {
@@ -72,7 +72,7 @@ router
 router
   .route("/trips/:tripId/expenses")
   .get(authMiddleware, tripController.getTripExpenses)
-  .post(authMiddleware, addExpensesValidation, tripController.addExpenses);
+  .post(authMiddleware, addExpenseValidation, tripController.addExpenses);
 
 router
   .route("/trips/:tripId/expenses/:expenseId")

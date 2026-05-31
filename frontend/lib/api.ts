@@ -439,10 +439,10 @@ export async function getTripCollaborators(tripId: string) {
 export async function getExpenses(tripId: string) {
   const cookieStore = await cookies();
   const res = await fetch(buildApiUrl(`/api/trips/${tripId}/expenses`), {
+    cache: "no-store",
     headers: {
       Cookie: cookieStore.toString(),
     },
-    next: { tags: ["expenses"] },
   });
 
   if (!res.ok) return null;

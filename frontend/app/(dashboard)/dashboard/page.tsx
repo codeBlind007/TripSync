@@ -119,10 +119,13 @@ async function fetchDashboardData() {
               trip.tasks.length
             }`
           : "0/0",
-      totalExpenses: trip.expenses.reduce(
-        (sum, expense) => sum + expense.amount,
-        0,
-      ),
+      totalExpenses: trip.expenses.reduce((sum, expense) => {
+        const val =
+          (expense as { totalAmount?: number; amount?: number }).totalAmount ??
+          (expense as { totalAmount?: number; amount?: number }).amount ??
+          0;
+        return sum + val;
+      }, 0),
     }));
 
     // Transform recent trips data
@@ -132,10 +135,13 @@ async function fetchDashboardData() {
       dates: formatDateRange(new Date(trip.startDate), new Date(trip.endDate)),
       collaborators: trip.collaborators.length,
       // hasStory: trip.story && Object.keys(trip.story.content).length > 0,
-      totalExpenses: trip.expenses.reduce(
-        (sum, expense) => sum + expense.amount,
-        0,
-      ),
+      totalExpenses: trip.expenses.reduce((sum, expense) => {
+        const val =
+          (expense as { totalAmount?: number; amount?: number }).totalAmount ??
+          (expense as { totalAmount?: number; amount?: number }).amount ??
+          0;
+        return sum + val;
+      }, 0),
     }));
 
     // Calculate statistics
@@ -159,7 +165,13 @@ async function fetchDashboardData() {
 
     const totalExpenses = completedTrips.reduce((total: number, trip: Trip) => {
       const tripExpense =
-        trip.expenses?.reduce((sum, exp) => sum + exp.amount, 0) || 0;
+        trip.expenses?.reduce((sum, exp) => {
+          const val =
+            (exp as { totalAmount?: number; amount?: number }).totalAmount ??
+            (exp as { totalAmount?: number; amount?: number }).amount ??
+            0;
+          return sum + val;
+        }, 0) || 0;
       return total + tripExpense;
     }, 0);
 

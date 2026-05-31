@@ -33,7 +33,10 @@ const CompletedTripCard = ({ trip }: { trip: Trip }) => {
   const completedTasksCount =
     trip.tasks?.filter((task) => task.completed).length || 0;
   const expensesTotal =
-    trip.expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+    trip.expenses?.reduce((sum, expense) => {
+      const val = (expense as any).totalAmount ?? (expense as any).amount ?? 0;
+      return sum + val;
+    }, 0) || 0;
   const itineraryDays = trip.itinerary?.length || 0;
 
   return (

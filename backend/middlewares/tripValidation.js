@@ -148,36 +148,86 @@ export const addTaskValidation = (req, res, next) => {
   next();
 };
 
-export const addExpensesValidation = (req, res, next) => {
+export const addExpenseValidation = (req, res, next) => {
   const schema = Joi.object({
-    amount: Joi.number().positive().required().messages({
-      "number.base": "Amount must be a number",
-      "number.positive": "Amount must be a positive number",
-      "any.required": "Amount is required",
+    title: Joi.string().trim().min(3).max(100).required().messages({
+      "string.base": "Title must be a string",
+      "string.empty": "Title is required",
+      "string.min": "Title must be at least 3 characters long",
+      "string.max": "Title must not exceed 100 characters",
+      "any.required": "Title is required",
     }),
-    category: Joi.string().required().min(3).max(100).messages({
-      "string.base": "category must be a string",
-      "string.empty": "category is required",
-      "string.min": "category must be at least 3 characters long",
-      "string.max": "category must not be more than 100 characters",
+
+    totalAmount: Joi.number().positive().required().messages({
+      "number.base": "Total amount must be a number",
+      "number.positive": "Total amount must be positive",
+      "any.required": "Total amount is required",
     }),
-    spentBy: Joi.string().required().messages({
-      "string.base": "spentBy must be a string",
-      "string.empty": "spentBy is required",
+
+    category: Joi.string().trim().min(3).max(100).required().messages({
+      "string.base": "Category must be a string",
+      "string.empty": "Category is required",
+      "string.min": "Category must be at least 3 characters long",
+      "string.max": "Category must not exceed 100 characters",
+      "any.required": "Category is required",
     }),
-    sharedWith: Joi.array().items(Joi.string()).required().messages({
-      "array.base": "sharedWith must be an array of strings",
-      "any.required": "sharedWith is required",
-    }),
-    note: Joi.string().required().min(10).max(200).messages({
+
+    payments: Joi.array()
+      .items(
+        Joi.object({
+          user: Joi.string().required().messages({
+            "string.base": "Payer user id must be a string",
+            "string.empty": "Payer user id is required",
+            "any.required": "Payer user id is required",
+          }),
+
+          paidAmount: Joi.number().positive().required().messages({
+            "number.base": "Paid amount must be a number",
+            "number.positive": "Paid amount must be positive",
+            "any.required": "Paid amount is required",
+          }),
+        })
+      )
+      .min(1)
+      .required()
+      .messages({
+        "array.base": "Payments must be an array",
+        "array.min": "At least one payment entry is required",
+        "any.required": "Payments are required",
+      }),
+
+    participants: Joi.array()
+      .items(
+        Joi.object({
+          user: Joi.string().required().messages({
+            "string.base": "Participant user id must be a string",
+            "string.empty": "Participant user id is required",
+            "any.required": "Participant user id is required",
+          }),
+
+          shareAmount: Joi.number().positive().required().messages({
+            "number.base": "Share amount must be a number",
+            "number.positive": "Share amount must be positive",
+            "any.required": "Share amount is required",
+          }),
+        })
+      )
+      .min(1)
+      .required()
+      .messages({
+        "array.base": "Participants must be an array",
+        "array.min": "At least one participant is required",
+        "any.required": "Participants are required",
+      }),
+
+    note: Joi.string().trim().min(3).max(500).allow("").optional().messages({
       "string.base": "Note must be a string",
-      "string.max": "Note must not be more than 200 characters",
-      "string.min": "Note must be at least 10 characters long",
-      "string.empty": "Note is required",
+      "string.min": "Note must be at least 3 characters long",
+      "string.max": "Note must not exceed 500 characters",
     }),
-    date: Joi.date().required().messages({
-      "date.base": "Date must be a valid date",
-      "any.required": "Date is required",
+
+    date: Joi.date().optional().messages({
+      "date.base": "Date must be valid",
     }),
   });
 
@@ -190,8 +240,29 @@ export const addExpensesValidation = (req, res, next) => {
     return next(new AppError(error.details[0].message, 400));
   }
 
-  value.category = value.category.trim();
-  value.note = value.note.trim();
   req.validatedData = value;
+
+  const totalPaid = value.payments.reduce(
+      (sum, payment) => sum + payment.paidAmount,
+      0,
+    );
+
+    const totalShared = value.participants.reduce(
+      (sum, participant) => sum + participant.shareAmount,
+      0,
+    );
+
+    if (totalPaid !== value.totalAmount) {
+      return next(
+        new AppError("Sum of paid amounts must equal total amount", 400),
+      );
+    }
+
+    if (totalShared !== value.totalAmount) {
+      return next(
+        new AppError("Sum of participant shares must equal total amount", 400),
+      );
+    }
+
   next();
 };

@@ -104,31 +104,6 @@ const tripSchema = new Schema({
     },
   ],
 
-  expenses: [
-    {
-      amount: {
-        type: Number,
-        required: true,
-      },
-      category: String, // e.g., Food, Transport, Stay
-      spentBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      sharedWith: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-      ],
-      note: String,
-      date: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
-
   story: {
     content: {
       type: Object, // Quill Delta or HTML

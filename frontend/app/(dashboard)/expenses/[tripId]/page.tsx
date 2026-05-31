@@ -1,20 +1,6 @@
 import { getExpenses } from "@/lib/api";
 import ExpenseList from "@/components/expenses/ExpenseList";
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Expense {
-  _id: string;
-  amount: number;
-  category: string;
-  spentBy: User;
-  sharedWith: User[];
-  note: string;
-  date: string;
-}
+import { Expense } from "@/types";
 
 interface expenseProps {
   params: Promise<{

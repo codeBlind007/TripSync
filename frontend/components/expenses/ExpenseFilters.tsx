@@ -1,13 +1,14 @@
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Search, Filter, ChevronDown } from "lucide-react"
+} from "@/components/ui/select";
+import { Search, Filter, ChevronDown } from "lucide-react";
+import { getCategoryLabel } from "@/lib/expenseUtils";
 
 interface ExpenseFiltersProps {
   searchTerm: string;
@@ -32,9 +33,9 @@ export function ExpenseFilters({
   uniqueCategories,
   filteredCount,
   totalCount,
-  getCategoryIcon
+  getCategoryIcon,
 }: ExpenseFiltersProps) {
-  const hasActiveFilters = searchTerm || categoryFilter !== 'all';
+  const hasActiveFilters = searchTerm || categoryFilter !== "all";
 
   return (
     <div className="mb-6">
@@ -42,13 +43,13 @@ export function ExpenseFilters({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search expenses or people..."
+            placeholder="Search by expense, payer, or participant..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
-        
+
         <div className="flex gap-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-40 cursor-pointer">
@@ -57,9 +58,9 @@ export function ExpenseFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {uniqueCategories.map(category => (
+              {uniqueCategories.map((category) => (
                 <SelectItem key={category} value={category.toLowerCase()}>
-                  {getCategoryIcon(category)} {category}
+                  {getCategoryIcon(category)} {getCategoryLabel(category)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -79,18 +80,18 @@ export function ExpenseFilters({
           </Select>
         </div>
       </div>
-      
+
       {hasActiveFilters && (
         <div className="mt-3 flex items-center gap-2">
           <span className="text-sm text-gray-600">
             Showing {filteredCount} of {totalCount} expenses
           </span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
-              setSearchTerm('');
-              setCategoryFilter('all');
+              setSearchTerm("");
+              setCategoryFilter("all");
             }}
             className="text-xs h-6 px-2 cursor-pointer"
           >
