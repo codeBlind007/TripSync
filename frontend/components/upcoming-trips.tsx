@@ -120,7 +120,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const expensesTotal =
     trip.expenses?.reduce((sum, expense) => {
       // support new Expense model (totalAmount) and legacy (amount)
-      const val = (expense as any).totalAmount ?? (expense as any).amount ?? 0;
+      const val = expense.totalAmount ?? expense.amount ?? 0;
       return sum + val;
     }, 0) || 0;
   const itineraryDays = trip.itinerary?.length || 0;

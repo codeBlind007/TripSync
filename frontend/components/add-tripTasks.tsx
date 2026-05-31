@@ -41,10 +41,7 @@ export default function AddTask({ tripId, users }: AddTaskProps) {
   const router = useRouter();
   const { getToken } = useAuth();
   console.log(users);
-  const demoUsers =
-    users?.length > 0
-      ? users
-      : [];
+  const demoUsers = users?.length > 0 ? users : [];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +141,7 @@ export default function AddTask({ tripId, users }: AddTaskProps) {
         setIsSubmitting(false);
       }
     },
-    [formData, tripId, validateForm, router],
+    [formData, getToken, tripId, validateForm, router],
   );
 
   const getInitials = useCallback((name: string) => {
