@@ -44,6 +44,18 @@ const getUserMongoId = async (identifier, email) => {
   throw new Error("User not found");
 };
 
+const withExpenseTotals = (trips, totalsMap) =>
+  trips.map((trip) => {
+    const total = totalsMap.get(String(trip._id)) || 0;
+    const plainTrip =
+      typeof trip.toObject === "function" ? trip.toObject() : trip;
+
+    return {
+      ...plainTrip,
+      expenses: [{ amount: total }],
+    };
+  });
+
 const respondToInvite = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
@@ -151,9 +163,14 @@ const upComingTrips = async (req, res, next) => {
         },
       ]);
       const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
-      upComingTrips.forEach((trip) => {
-        const total = totalsMap.get(String(trip._id)) || 0;
-        trip.expenses = [{ amount: total }];
+      const tripsWithExpenses = withExpenseTotals(upComingTrips, totalsMap);
+
+      return res.status(200).json({
+        status: "success",
+        results: tripsWithExpenses.length,
+        data: {
+          upComingTrips: tripsWithExpenses,
+        },
       });
     } catch (e) {
       // don't fail the whole request if expense aggregation fails
@@ -169,7 +186,7 @@ const upComingTrips = async (req, res, next) => {
       status: "success",
       results: upComingTrips.length,
       data: {
-        upComingTrips,
+        upComingTrips: withExpenseTotals(upComingTrips, new Map()),
       },
     });
   } catch (error) {
@@ -208,9 +225,14 @@ const ongoingTrips = async (req, res, next) => {
         },
       ]);
       const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
-      trips.forEach((trip) => {
-        const total = totalsMap.get(String(trip._id)) || 0;
-        trip.expenses = [{ amount: total }];
+      const tripsWithExpenses = withExpenseTotals(trips, totalsMap);
+
+      return res.status(200).json({
+        status: "success",
+        results: tripsWithExpenses.length,
+        data: {
+          trips: tripsWithExpenses,
+        },
       });
     } catch (e) {
       console.error("attach expenses error:", e?.message || e);
@@ -226,7 +248,7 @@ const ongoingTrips = async (req, res, next) => {
       status: "success",
       results: trips.length,
       data: {
-        trips,
+        trips: withExpenseTotals(trips, new Map()),
       },
     });
   } catch (error) {
@@ -329,9 +351,14 @@ const completedTrips = async (req, res, next) => {
         },
       ]);
       const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
-      completedTrips.forEach((trip) => {
-        const total = totalsMap.get(String(trip._id)) || 0;
-        trip.expenses = [{ amount: total }];
+      const tripsWithExpenses = withExpenseTotals(completedTrips, totalsMap);
+
+      return res.status(200).json({
+        status: "success",
+        results: tripsWithExpenses.length,
+        data: {
+          completedTrips: tripsWithExpenses,
+        },
       });
     } catch (e) {
       console.error("attach expenses error:", e?.message || e);
@@ -346,7 +373,7 @@ const completedTrips = async (req, res, next) => {
       status: "success",
       results: completedTrips.length,
       data: {
-        completedTrips,
+        completedTrips: withExpenseTotals(completedTrips, new Map()),
       },
     });
   } catch (error) {
@@ -389,9 +416,14 @@ const completedTripsDashboard = async (req, res, next) => {
         },
       ]);
       const totalsMap = new Map(totals.map((t) => [String(t._id), t.total]));
-      completedTrips.forEach((trip) => {
-        const total = totalsMap.get(String(trip._id)) || 0;
-        trip.expenses = [{ amount: total }];
+      const tripsWithExpenses = withExpenseTotals(completedTrips, totalsMap);
+
+      return res.status(200).json({
+        status: "success",
+        results: tripsWithExpenses.length,
+        data: {
+          completedTrips: tripsWithExpenses,
+        },
       });
     } catch (e) {
       console.error("attach expenses error:", e?.message || e);
@@ -406,7 +438,7 @@ const completedTripsDashboard = async (req, res, next) => {
       status: "success",
       results: completedTrips.length,
       data: {
-        completedTrips,
+        completedTrips: withExpenseTotals(completedTrips, new Map()),
       },
     });
   } catch (error) {

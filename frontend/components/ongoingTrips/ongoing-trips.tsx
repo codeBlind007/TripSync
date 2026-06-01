@@ -2,7 +2,6 @@
 import React from "react";
 import {
   Calendar,
-  MessageSquare,
   Plus,
   List,
   DollarSign,
@@ -17,7 +16,6 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from "next/navigation";
 import { Trip } from "../upcoming-trips";
 
@@ -44,7 +42,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const isOverdue = daysUntilTrip < 0;
 
   const collaboratorsCount = trip.collaborators?.length || 0;
-  const totalParticipants = collaboratorsCount;
   const tasksCount = trip.tasks?.length || 0;
   const completedTasksCount =
     trip.tasks?.filter((task) => task.completed).length || 0;
@@ -61,7 +58,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const pendingInvitesCount =
     trip.pendingInvites?.filter((invite) => invite.status === "pending")
       .length || 0;
-  const unreadMessages = trip.chatMessages?.length || 0;
 
   // Calculate completion percentage
   const completionItems = [
@@ -73,6 +69,13 @@ const TripCard = ({ trip }: { trip: Trip }) => {
     },
     { completed: collaboratorsCount > 0, weight: 20 },
   ];
+
+  const formatRupeeAmount = (amount: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
 
   const completionPercentage = Math.round(
     completionItems.reduce(
@@ -165,38 +168,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
       </CardHeader>
 
       <CardContent className="pt-0 pb-6">
-        {/* Collaborators */}
-        {collaboratorsCount > 0 && (
-          <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {totalParticipants} traveler{totalParticipants !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <div className="flex -space-x-2">
-              {trip.collaborators.slice(0, 4).map((collaborator) => (
-                <Avatar
-                  key={collaborator._id}
-                  className="h-8 w-8 border-2 border-white ring-1 ring-gray-200"
-                >
-                  <AvatarImage src={collaborator.avatar} />
-                  <AvatarFallback className="text-xs bg-blue-100 text-blue-700 font-medium">
-                    {collaborator.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-              {collaboratorsCount > 4 && (
-                <div className="h-8 w-8 rounded-full bg-gray-200 border-2 border-white ring-1 ring-gray-200 flex items-center justify-center">
-                  <span className="text-xs font-medium text-gray-600">
-                    +{collaboratorsCount - 4}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
+  
         {/* Trip Progress */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
@@ -255,7 +227,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
               </span>
             </div>
             <div className="text-lg font-bold text-purple-900">
-              ${expensesTotal.toFixed(0)}
+              {formatRupeeAmount(expensesTotal)}
               <span className="text-sm font-normal text-purple-700 ml-1">
                 planned
               </span>
@@ -264,15 +236,15 @@ const TripCard = ({ trip }: { trip: Trip }) => {
 
           <div className="bg-amber-50 rounded-xl p-3.5 border border-amber-100 hover:border-amber-200 transition-colors">
             <div className="flex items-center gap-2 mb-1.5">
-              <MessageSquare className="h-4 w-4 text-amber-600" />
+              <Users className="h-4 w-4 text-amber-600" />
               <span className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
-                Activity
+                Collaborators
               </span>
             </div>
             <div className="text-lg font-bold text-amber-900">
-              {unreadMessages}
+              {collaboratorsCount}
               <span className="text-sm font-normal text-amber-700 ml-1">
-                message{unreadMessages !== 1 ? "s" : ""}
+                collaborator{collaboratorsCount !== 1 ? "s" : ""}
               </span>
             </div>
           </div>
@@ -363,10 +335,10 @@ const OngoingTrips = ({ ongoingTrips }: OngoingProps) => {
       </div>
       <p className="text-gray-600 -mt-4">
         {ongoingTrips.length > 0
-          ? `You have ${ongoingTrips.length} upcoming ${
+          ? `You have ${ongoingTrips.length} ongoing ${
               ongoingTrips.length === 1 ? "trip" : "trips"
             }`
-          : "No upcoming trips planned"}
+          : "No ongoing trips"}
       </p>
 
       {ongoingTrips.length === 0 ? (

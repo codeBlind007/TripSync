@@ -14,7 +14,6 @@ import {
   MapPin,
   Clock,
   Plane,
-  Camera,
   TrendingUp,
   Users,
   CheckCircle2,
@@ -23,6 +22,7 @@ import {
   DollarSign,
   CheckSquare,
   FileText,
+  Calendar,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -225,7 +225,7 @@ export default function DashboardClient({
           </CardHeader>
           <CardContent className="space-y-3">
             <Button
-              className="w-full justify-start"
+              className="w-full justify-start cursor-pointer"
               variant="outline"
               onClick={handleAddTrip}
             >
@@ -233,28 +233,21 @@ export default function DashboardClient({
               Plan New Trip
             </Button>
             <Button
-              className="w-full justify-start"
+              className="w-full justify-start cursor-pointer"
               variant="outline"
-              onClick={() => router.push("/trips")}
+              onClick={() => router.push("/ongoing-trips")}
+
             >
               <Plane className="h-4 w-4 mr-2" />
-              View All Trips
+              View Ongoing Trips
             </Button>
             <Button
-              className="w-full justify-start"
+              className="w-full justify-start cursor-pointer"
               variant="outline"
-              onClick={() => router.push("/stories")}
+              onClick={() => router.push("/dashboard/trips/upcoming-trips")}
             >
-              <Camera className="h-4 w-4 mr-2" />
-              Write Travel Story
-            </Button>
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              onClick={() => router.push("/resources")}
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              Browse Resources
+              <Calendar className="h-4 w-4 mr-2" />
+              View Upcoming Trips
             </Button>
           </CardContent>
         </Card>
@@ -314,7 +307,7 @@ export default function DashboardClient({
               variant="ghost"
               size="sm"
               className="w-full"
-              onClick={() => router.push("/trips")}
+              onClick={() => router.push("/completed-trips")}
             >
               View All Trips
             </Button>

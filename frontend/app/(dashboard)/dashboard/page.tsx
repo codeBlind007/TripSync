@@ -74,6 +74,10 @@ function formatDateRange(startDate: Date, endDate: Date): string {
   return `${start} - ${end}`;
 }
 
+function asArray<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
 async function fetchDashboardData() {
   const user: User = { name: "" };
   const data = await getUserInfo();
@@ -93,49 +97,56 @@ async function fetchDashboardData() {
     // Fetch upcoming trips (trips with end date in the future)
     const upcomingData = await getUserUpcomingTrips();
     const upComingTrips = upcomingData?.upComingTrips ?? [];
-
+    console.log("Upcoming Trips Data:", upComingTrips);
     // Fetch recent trips (completed trips, sorted by end date)
     const completedData = await getUserCompletedTrips();
     const completedTrips = completedData?.completedTrips ?? [];
-
+    console.log("Completed Trips Data:", completedTrips);
     const allTripsData = await getAllUserTrips();
     const allTrips = allTripsData?.allTrips ?? [];
 
     // Transform upcoming trips data
-    const upcomingTrips = upComingTrips.map((trip: Trip) => ({
-      id: trip._id.toString(),
-      destination: trip.destination,
-      description: trip.description || "",
-      dates: formatDateRange(new Date(trip.startDate), new Date(trip.endDate)),
-      daysLeft: daysBetween(currentDate, new Date(trip.startDate)),
-      status:
-        trip.tasks.filter((task) => task.completed).length === trip.tasks.length
-          ? "Ready"
-          : "Planning",
-      collaborators: trip.collaborators.length,
-      tasksProgress:
-        trip.tasks.length > 0
-          ? `${trip.tasks.filter((task) => task.completed).length}/${
-              trip.tasks.length
-            }`
-          : "0/0",
-      totalExpenses: trip.expenses.reduce((sum, expense) => {
-        const val =
-          (expense as { totalAmount?: number; amount?: number }).totalAmount ??
-          (expense as { totalAmount?: number; amount?: number }).amount ??
-          0;
-        return sum + val;
-      }, 0),
-    }));
+    const upcomingTrips = upComingTrips.map((trip: Trip) => {
+      const taskList = asArray(trip.tasks);
+      const collaboratorList = asArray(trip.collaborators);
+      const expenseList = asArray(trip.expenses);
+
+      return {
+        id: trip._id.toString(),
+        destination: trip.destination,
+        description: trip.description || "",
+        dates: formatDateRange(
+          new Date(trip.startDate),
+          new Date(trip.endDate),
+        ),
+        daysLeft: daysBetween(currentDate, new Date(trip.startDate)),
+        status:
+          taskList.filter((task) => task.completed).length === taskList.length
+            ? "Ready"
+            : "Planning",
+        collaborators: collaboratorList.length,
+        tasksProgress:
+          taskList.length > 0
+            ? `${taskList.filter((task) => task.completed).length}/${taskList.length}`
+            : "0/0",
+        totalExpenses: expenseList.reduce((sum, expense) => {
+          const val =
+            (expense as { totalAmount?: number; amount?: number })
+              .totalAmount ??
+            (expense as { totalAmount?: number; amount?: number }).amount ??
+            0;
+          return sum + val;
+        }, 0),
+      };
+    });
 
     // Transform recent trips data
     const recentTrips = completedTrips.map((trip: Trip) => ({
       id: trip._id.toString(),
       destination: trip.title,
       dates: formatDateRange(new Date(trip.startDate), new Date(trip.endDate)),
-      collaborators: trip.collaborators.length,
-      // hasStory: trip.story && Object.keys(trip.story.content).length > 0,
-      totalExpenses: trip.expenses.reduce((sum, expense) => {
+      collaborators: asArray(trip.collaborators).length,
+      totalExpenses: asArray(trip.expenses).reduce((sum, expense) => {
         const val =
           (expense as { totalAmount?: number; amount?: number }).totalAmount ??
           (expense as { totalAmount?: number; amount?: number }).amount ??
@@ -165,7 +176,7 @@ async function fetchDashboardData() {
 
     const totalExpenses = completedTrips.reduce((total: number, trip: Trip) => {
       const tripExpense =
-        trip.expenses?.reduce((sum, exp) => {
+        asArray(trip.expenses).reduce((sum, exp) => {
           const val =
             (exp as { totalAmount?: number; amount?: number }).totalAmount ??
             (exp as { totalAmount?: number; amount?: number }).amount ??

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Calendar,
-  MessageSquare,
   Plus,
   List,
   DollarSign,
@@ -22,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 
@@ -113,7 +111,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const isOverdue = daysUntilTrip < 0;
 
   const collaboratorsCount = trip.collaborators?.length || 0;
-  const totalParticipants = collaboratorsCount; // +1 for owner
   const tasksCount = trip.tasks?.length || 0;
   const completedTasksCount =
     trip.tasks?.filter((task) => task.completed).length || 0;
@@ -127,7 +124,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
   const pendingInvitesCount =
     trip.pendingInvites?.filter((invite) => invite.status === "pending")
       .length || 0;
-  const unreadMessages = trip.chatMessages?.length || 0;
 
   // Calculate completion percentage
   const completionItems = [
@@ -149,7 +145,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
 
   const getStatusColor = () => {
     if (isOverdue) return "bg-red-500";
-    if (isStartingToday) return "bg-green-500";
     if (isStartingSoon) return "bg-amber-500";
     return "bg-blue-500";
   };
@@ -231,38 +226,6 @@ const TripCard = ({ trip }: { trip: Trip }) => {
       </CardHeader>
 
       <CardContent className="pt-0 pb-6">
-        {/* Collaborators */}
-        {collaboratorsCount > 0 && (
-          <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {totalParticipants} traveler{totalParticipants !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <div className="flex -space-x-2">
-              {trip.collaborators.slice(0, 4).map((collaborator) => (
-                <Avatar
-                  key={collaborator._id}
-                  className="h-8 w-8 border-2 border-white ring-1 ring-gray-200"
-                >
-                  <AvatarImage src={collaborator.avatar} />
-                  <AvatarFallback className="text-xs bg-blue-100 text-blue-700 font-medium">
-                    {collaborator.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-              {collaboratorsCount > 4 && (
-                <div className="h-8 w-8 rounded-full bg-gray-200 border-2 border-white ring-1 ring-gray-200 flex items-center justify-center">
-                  <span className="text-xs font-medium text-gray-600">
-                    +{collaboratorsCount - 4}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Trip Progress */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
@@ -330,15 +293,15 @@ const TripCard = ({ trip }: { trip: Trip }) => {
 
           <div className="bg-amber-50 rounded-xl p-3.5 border border-amber-100 hover:border-amber-200 transition-colors">
             <div className="flex items-center gap-2 mb-1.5">
-              <MessageSquare className="h-4 w-4 text-amber-600" />
+              <Users className="h-4 w-4 text-amber-600" />
               <span className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
-                Activity
+                Collaborators
               </span>
             </div>
             <div className="text-lg font-bold text-amber-900">
-              {unreadMessages}
+              {collaboratorsCount}
               <span className="text-sm font-normal text-amber-700 ml-1">
-                message{unreadMessages !== 1 ? "s" : ""}
+                collaborator{collaboratorsCount !== 1 ? "s" : ""}
               </span>
             </div>
           </div>
