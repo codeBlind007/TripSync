@@ -12,14 +12,21 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogAction,
+  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Clock,
   MapPin,
@@ -55,6 +62,194 @@ interface EditActivityClientProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+const normalizeTimeForInput = (time?: string) => {
+  if (!time) return "";
+
+  const trimmedTime = time.trim();
+
+  const militaryMatch = trimmedTime.match(
+    /^([01]?\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/,
+  );
+  if (militaryMatch) {
+    const hours = militaryMatch[1].padStart(2, "0");
+    return `${hours}:${militaryMatch[2]}`;
+  }
+
+  const twelveHourMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+
+  if (!twelveHourMatch) {
+    return "";
+  }
+
+  let hours = Number(twelveHourMatch[1]);
+  const minutes = twelveHourMatch[2];
+  const period = twelveHourMatch[3].toUpperCase();
+
+  if (period === "PM" && hours !== 12) {
+    hours += 12;
+  }
+
+  if (period === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${minutes}`;
+};
+
+const formatTimeDisplay = (time: string) => {
+  if (!time) return "";
+
+  const normalizedTime = normalizeTimeForInput(time);
+  if (!normalizedTime) return time;
+
+  const [hours, minutes] = normalizedTime.split(":");
+  const hourNumber = Number(hours);
+  const hour12 = hourNumber % 12 || 12;
+  const ampm = hourNumber >= 12 ? "PM" : "AM";
+  return `${hour12}:${minutes} ${ampm}`;
+};
+
+const hourOptions = Array.from({ length: 12 }, (_, index) => {
+  const hour = index + 1;
+  return String(hour).padStart(2, "0");
+});
+
+const minuteOptions = Array.from({ length: 60 }, (_, index) => {
+  const minute = String(index).padStart(2, "0");
+  return minute;
+});
+
+const toTimeParts = (time: string) => {
+  const normalizedTime = normalizeTimeForInput(time);
+
+  if (!normalizedTime) {
+    return { hour: "12", minute: "00", period: "AM" };
+  }
+
+  const [hours, minutes] = normalizedTime.split(":");
+  const hourNumber = Number(hours);
+  return {
+    hour: String(hourNumber % 12 || 12).padStart(2, "0"),
+    minute: minutes,
+    period: hourNumber >= 12 ? "PM" : "AM",
+  };
+};
+
+const fromTimeParts = (hour: string, minute: string, period: string) => {
+  let nextHour = Number(hour);
+
+  if (period === "PM" && nextHour !== 12) {
+    nextHour += 12;
+  }
+
+  if (period === "AM" && nextHour === 12) {
+    nextHour = 0;
+  }
+
+  return `${String(nextHour).padStart(2, "0")}:${minute}`;
+};
+
+function TimePickerField({
+  value,
+  onChange,
+  disabled,
+  error,
+}: {
+  value: string;
+  onChange: (nextValue: string) => void;
+  disabled?: boolean;
+  error?: string;
+}) {
+  const displayValue = value ? formatTimeDisplay(value) : "Select a time";
+  const parts = toTimeParts(value);
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            Hour
+          </Label>
+          <Select
+            value={parts.hour}
+            onValueChange={(nextHour) =>
+              onChange(fromTimeParts(nextHour, parts.minute, parts.period))
+            }
+            disabled={disabled}
+          >
+            <SelectTrigger
+              className={`h-12 w-full ${error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            >
+              <SelectValue placeholder="HH" />
+            </SelectTrigger>
+            <SelectContent>
+              {hourOptions.map((hour) => (
+                <SelectItem key={hour} value={hour}>
+                  {hour}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            Minute
+          </Label>
+          <Select
+            value={parts.minute}
+            onValueChange={(nextMinute) =>
+              onChange(fromTimeParts(parts.hour, nextMinute, parts.period))
+            }
+            disabled={disabled}
+          >
+            <SelectTrigger
+              className={`h-12 w-full ${error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            >
+              <SelectValue placeholder="MM" />
+            </SelectTrigger>
+            <SelectContent>
+              {minuteOptions.map((minute) => (
+                <SelectItem key={minute} value={minute}>
+                  {minute}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            Period
+          </Label>
+          <Select
+            value={parts.period}
+            onValueChange={(nextPeriod) =>
+              onChange(fromTimeParts(parts.hour, parts.minute, nextPeriod))
+            }
+            disabled={disabled}
+          >
+            <SelectTrigger
+              className={`h-12 w-full ${error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            >
+              <SelectValue placeholder="AM/PM" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="AM">AM</SelectItem>
+              <SelectItem value="PM">PM</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl bg-purple-50 px-3 py-2 text-sm text-purple-800">
+        <Clock className="h-4 w-4 shrink-0" />
+        <span>Selected time: {displayValue}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function EditActivityClient({
   tripId,
   itineraryId,
@@ -65,7 +260,7 @@ export default function EditActivityClient({
   const { getToken } = useAuth();
   const [formData, setFormData] = useState<ActivityFormData>({
     title: initialData?.title || "",
-    time: initialData?.time || "",
+    time: normalizeTimeForInput(initialData?.time),
     location: initialData?.location || "",
     notes: initialData?.notes || "",
   });
@@ -73,6 +268,32 @@ export default function EditActivityClient({
   const [errors, setErrors] = useState<Partial<ActivityFormData>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isEditing = !!activityId;
+
+  const applyBackendError = (message: string) => {
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes("title")) {
+      setErrors((prev) => ({ ...prev, title: message }));
+      return;
+    }
+
+    if (lowerMessage.includes("time")) {
+      setErrors((prev) => ({ ...prev, time: message }));
+      return;
+    }
+
+    if (lowerMessage.includes("location")) {
+      setErrors((prev) => ({ ...prev, location: message }));
+      return;
+    }
+
+    if (lowerMessage.includes("notes")) {
+      setErrors((prev) => ({ ...prev, notes: message }));
+      return;
+    }
+
+    toast.error(message);
+  };
 
   const validateForm = () => {
     const newErrors: Partial<ActivityFormData> = {};
@@ -134,9 +355,13 @@ export default function EditActivityClient({
       });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to ${isEditing ? "update" : "create"} activity`,
-        );
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData?.message ||
+          `Failed to ${isEditing ? "update" : "create"} activity`;
+
+        applyBackendError(errorMessage);
+        return;
       }
 
       toast.success(
@@ -188,14 +413,6 @@ export default function EditActivityClient({
       setIsLoading(false);
       setShowDeleteConfirm(false);
     }
-  };
-
-  const formatTimeDisplay = (time: string) => {
-    if (!time) return "";
-    const [hours, minutes] = time.split(":");
-    const hour12 = parseInt(hours) % 12 || 12;
-    const ampm = parseInt(hours) >= 12 ? "PM" : "AM";
-    return `${hour12}:${minutes} ${ampm}`;
   };
 
   return (
@@ -283,27 +500,17 @@ export default function EditActivityClient({
                       <Timer className="h-4 w-4 text-purple-600" />
                       Time *
                     </Label>
-                    <div className="relative">
-                      <Input
-                        id="time"
-                        name="time"
-                        type="time"
-                        value={formData.time}
-                        onChange={handleChange}
-                        className={`h-12 text-base ${errors.time ? "border-red-500 focus:border-red-500" : ""}`}
-                        disabled={isLoading}
-                      />
-                      {formData.time && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <Badge
-                            variant="outline"
-                            className="text-xs bg-purple-50 text-purple-700 border-purple-200 "
-                          >
-                            {formatTimeDisplay(formData.time)}
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
+                    <TimePickerField
+                      value={formData.time}
+                      onChange={(nextTime) => {
+                        setFormData((prev) => ({ ...prev, time: nextTime }));
+                        if (errors.time) {
+                          setErrors((prev) => ({ ...prev, time: undefined }));
+                        }
+                      }}
+                      disabled={isLoading}
+                      error={errors.time}
+                    />
                     {errors.time && (
                       <div className="flex items-center gap-2 text-red-600 text-sm">
                         <AlertCircle className="h-4 w-4" />
@@ -346,12 +553,6 @@ export default function EditActivityClient({
                     >
                       <StickyNote className="h-4 w-4 text-green-600" />
                       Notes & Details
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-gray-100 text-gray-600"
-                      >
-                        Optional
-                      </Badge>
                     </Label>
                     <Textarea
                       id="notes"
@@ -360,9 +561,15 @@ export default function EditActivityClient({
                       onChange={handleChange}
                       placeholder="Add any special instructions, booking details, or reminders..."
                       rows={4}
-                      className="text-base resize-none"
+                      className={`text-base resize-none ${errors.notes ? "border-red-500 focus:border-red-500" : ""}`}
                       disabled={isLoading}
                     />
+                    {errors.notes && (
+                      <div className="flex items-center gap-2 text-red-600 text-sm">
+                        <AlertCircle className="h-4 w-4" />
+                        {errors.notes}
+                      </div>
+                    )}
                   </div>
 
                   <Separator />
