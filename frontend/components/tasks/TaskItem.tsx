@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircle2, Circle, Edit3, Trash2 } from "lucide-react";
+import { Edit3, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -30,18 +30,12 @@ interface Task {
 interface TaskItemProps {
   task: Task;
   tripId: string;
-  onToggleComplete: (taskId: string) => void;
   isCompleted?: boolean;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export function TaskItem({
-  task,
-  tripId,
-  onToggleComplete,
-  isCompleted = false,
-}: TaskItemProps) {
+export function TaskItem({ task, tripId, isCompleted = false }: TaskItemProps) {
   const router = useRouter();
   const { getToken } = useAuth();
   const getInitials = (name: string) => {
@@ -77,25 +71,7 @@ export function TaskItem({
   return (
     <div className="p-5">
       <div className="flex items-start gap-4">
-        {/* Checkbox */}
-        <button
-          onClick={() => !isCompleted && onToggleComplete(task._id)}
-          disabled={isCompleted}
-          className={`flex-shrink-0 mt-0.5 transition-colors cursor-pointer ${
-            task.completed
-              ? "text-green-600 hover:text-green-700"
-              : "text-gray-400 hover:text-gray-600"
-          } ${isCompleted ? "cursor-not-allowed opacity-60" : ""}`}
-          aria-label={
-            task.completed ? "Mark as incomplete" : "Mark as complete"
-          }
-        >
-          {task.completed ? (
-            <CheckCircle2 className="h-5 w-5" />
-          ) : (
-            <Circle className="h-5 w-5" />
-          )}
-        </button>
+        {/* Marking UI removed: no checkbox or mark/unmark control to prevent status updates */}
 
         {/* Task Content */}
         <div className="flex-1 min-w-0">

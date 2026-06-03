@@ -26,7 +26,7 @@ export function ItineraryHeader({
           variant="ghost"
           size="icon"
           className="rounded-full cursor-pointer"
-          onClick={() => router.back()}
+          onClick={() => router.push(`/dashboard`)}
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>

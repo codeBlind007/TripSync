@@ -29,7 +29,6 @@ export function EditTaskPage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { getToken } = useAuth();
-  console.log("component called");
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -66,7 +65,8 @@ export function EditTaskPage({
   };
 
   const handleCancel = () => {
-    router.back();
+    // Use push to go directly to Tasks list to avoid history back loops
+    router.push(`/tasks/${tripId}`);
   };
 
   return (

@@ -245,7 +245,7 @@ export default function CompletedTripsList({ trips }: { trips: Trip[] }) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.back()}
+              onClick={() => router.push("/dashboard")}
               className="rounded-full hover:bg-white hover:shadow-sm"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -280,7 +280,7 @@ export default function CompletedTripsList({ trips }: { trips: Trip[] }) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.back()}
+            onClick={() => router.push("/dashboard")}
             className="rounded-full hover:bg-white hover:shadow-sm"
           >
             <ChevronLeft className="h-5 w-5" />

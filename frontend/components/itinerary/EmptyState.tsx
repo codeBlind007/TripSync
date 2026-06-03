@@ -29,7 +29,7 @@ export function EmptyState({ tripId, isCompleted }: EmptyStateProps) {
               size="icon"
               asChild
               className="rounded-full cursor-pointer"
-              onClick={() => router.back()}
+              onClick={() => router.push(`/dashboard`)}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -42,7 +42,10 @@ export function EmptyState({ tripId, isCompleted }: EmptyStateProps) {
           </div>
           <div className="flex gap-2">
             {!isCompleted && (
-              <Button asChild className="bg-blue-600 hover:bg-blue-700 cursor-pointer">
+              <Button
+                asChild
+                className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              >
                 <Link href={`/itinerary/${tripId}/edit/}`}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Activities
@@ -59,14 +62,29 @@ export function EmptyState({ tripId, isCompleted }: EmptyStateProps) {
               <CalendarDays className="h-12 w-12 text-blue-600" />
             </div>
 
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-              Your adventure awaits
-            </h3>
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              Create your perfect itinerary by adding activities, places to
-              visit, and experiences to remember. Build your day-by-day plan and
-              never miss a moment.
-            </p>
+            {!isCompleted ? (
+              <>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                  Your adventure awaits
+                </h3>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  Create your perfect itinerary by adding activities, places to
+                  visit, and experiences to remember. Build your day-by-day plan
+                  and never miss a moment.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                  Trip completed
+                </h3>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  This trip has been completed. You can review the final
+                  itinerary and memories here. To make changes, create a copy of
+                  this trip or start a new one.
+                </p>
+              </>
+            )}
 
             <div className="space-y-4">
               {!isCompleted && (

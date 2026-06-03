@@ -191,7 +191,7 @@ export default function AddTask({ tripId, users }: AddTaskProps) {
         size="icon"
         asChild
         className="rounded-full"
-        onClick={() => router.back()}
+        onClick={() => router.push(`/tasks/${tripId}`)}
       >
         <ChevronLeft className="h-5 w-5" />
       </Button>{" "}

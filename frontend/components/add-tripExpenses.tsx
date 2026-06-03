@@ -335,7 +335,7 @@ export function ExpenseForm({
         payments,
         participants,
         note: data.note?.trim() || "",
-        date: data.date
+        date: data.date,
       };
 
       const url = API_BASE_URL
@@ -409,7 +409,7 @@ export function ExpenseForm({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/expenses/${tripId}`)}
             className="gap-2 cursor-pointer shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -1035,7 +1035,7 @@ export function ExpenseForm({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => router.back()}
+                    onClick={() => router.push(`/expenses/${tripId}`)}
                     className="cursor-pointer"
                   >
                     Cancel

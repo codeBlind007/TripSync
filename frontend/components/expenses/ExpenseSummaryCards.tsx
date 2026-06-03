@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { IndianRupee, Receipt, Wallet, ChevronLeft } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card";
+import { IndianRupee, Receipt, Wallet, ChevronLeft } from "lucide-react";
 import { formatAmount } from "@/lib/currencyConfig";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
@@ -8,25 +8,32 @@ interface ExpenseSummaryCardsProps {
   totalAmount: number;
   expenseCount: number;
   averageExpense: number;
+  tripId?: string;
 }
 
-export function ExpenseSummaryCards({ 
-  totalAmount, 
-  expenseCount, 
-  averageExpense 
+export function ExpenseSummaryCards({
+  totalAmount,
+  expenseCount,
+  averageExpense,
 }: ExpenseSummaryCardsProps) {
   const router = useRouter();
   return (
     <div className="space-y-4">
-      
       {/* Back Button */}
-      <Button variant="ghost" size="icon" asChild className="rounded-full cursor-pointer" onClick={() => router.back()}>
-          <ChevronLeft className="h-5 w-5" />
+      <Button
+        variant="ghost"
+        size="icon"
+        asChild
+        className="rounded-full cursor-pointer"
+        onClick={() =>
+          router.push("/dashboard")
+        }
+      >
+        <ChevronLeft className="h-5 w-5" />
       </Button>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -42,7 +49,7 @@ export function ExpenseSummaryCards({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -50,7 +57,9 @@ export function ExpenseSummaryCards({
                 <Receipt className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Expenses
+                </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {expenseCount}
                 </p>
@@ -58,7 +67,7 @@ export function ExpenseSummaryCards({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -74,7 +83,6 @@ export function ExpenseSummaryCards({
             </div>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

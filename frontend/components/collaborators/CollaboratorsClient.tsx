@@ -123,7 +123,7 @@ const CollaboratorsClient = ({
               variant="ghost"
               size="icon"
               className="rounded-full flex-none mt-1 sm:mt-0 cursor-pointer"
-              onClick={() => router.back()}
+              onClick={() => router.push("/dashboard")}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>

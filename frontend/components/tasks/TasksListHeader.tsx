@@ -9,6 +9,7 @@ interface TasksListHeaderProps {
   completionPercentage: number;
   onAddTask: () => void;
   isCompleted?: boolean;
+  tripId?: string;
 }
 
 export function TasksListHeader({
@@ -26,7 +27,9 @@ export function TasksListHeader({
         size="icon"
         asChild
         className="rounded-full cursor-pointer"
-        onClick={() => router.back()}
+        onClick={() =>
+          router.push("/dashboard")
+        }
       >
         <ChevronLeft className="h-5 w-5" />
       </Button>
