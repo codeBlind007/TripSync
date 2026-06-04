@@ -3,7 +3,6 @@ import TripModel from "../models/Trips.js";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import InvitationModel from "../models/Invitation.js";
-import { sendInvitationEmail } from "./invitationController.js";
 import { randomBytes } from "crypto";
 import crypto from "crypto";
 import AppError from "../utils/AppError.js";
@@ -1023,7 +1022,17 @@ const editExpenses = async (req, res, next) => {
 const getTripInvitePreview = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId, req.user?.email);
+
+    // The user may not exist in MongoDB yet (e.g. freshly signed-up via
+    // OAuth and not yet synced).  The preview only needs the userId for an
+    // optional "already a collaborator" check, so we tolerate a missing user.
+    let userId = null;
+    try {
+      userId = await getUserMongoId(clerkUserId, req.user?.email);
+    } catch {
+      // User not found in MongoDB – acceptable for a preview request.
+    }
+
     const { inviteCode } = req.params;
 
     if (!inviteCode) {
@@ -1042,9 +1051,11 @@ const getTripInvitePreview = async (req, res, next) => {
       throw new AppError("Invalid or expired invite link", 404);
     }
 
-    const isAlreadyCollaborator = trip.collaborators.some(
-      (collaborator) => collaborator.toString() === userId.toString(),
-    );
+    const isAlreadyCollaborator = userId
+      ? trip.collaborators.some(
+          (collaborator) => collaborator.toString() === userId.toString(),
+        )
+      : false;
 
     return res.status(200).json({
       success: true,
@@ -1111,7 +1122,15 @@ const generateInviteLink = async (req, res, next) => {
 const joinTripByInviteLink = async (req, res, next) => {
   try {
     const clerkUserId = req.auth?.userId;
-    const userId = await getUserMongoId(clerkUserId, req.user?.email);
+    let userId;
+    try {
+      userId = await getUserMongoId(clerkUserId, req.user?.email);
+    } catch {
+      throw new AppError(
+        "Your account setup is not complete yet. Please sign out and sign in again, then retry this invite link.",
+        403,
+      );
+    }
 
     const { inviteCode } = req.params;
 

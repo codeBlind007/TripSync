@@ -6,6 +6,7 @@ import {
 import type { Metadata } from "next";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { AuthSync } from "@/components/auth/auth-sync";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
+      <AuthSync />
       <AppSidebar />
 
       <SidebarInset className="flex flex-col min-h-screen">

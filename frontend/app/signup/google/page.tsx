@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useSignUp } from "@clerk/nextjs";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSignUp, useAuth } from "@clerk/nextjs";
 
 export default function GoogleSignupPage() {
   const { fetchStatus, signUp } = useSignUp();
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
   const startGoogleSignupStarted = useRef(false);
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -26,20 +28,30 @@ export default function GoogleSignupPage() {
     setShowFallback(false);
 
     try {
-      await signUp.sso({
+      const res = await signUp.sso({
         strategy: "oauth_google",
-        redirectUrl: redirectUrlComplete,
         redirectCallbackUrl: "/signup/google/callback",
+        redirectUrl: redirectUrlComplete,
       });
+      if (res?.error) {
+        console.error("Google signup failed:", res.error);
+        startGoogleSignupStarted.current = false;
+        setError(res.error.message || "Could not start Google signup.");
+        setShowFallback(true);
+      }
     } catch (err) {
-      console.error("Google signup redirect failed:", err);
+      console.error("Google signup failed:", err);
       startGoogleSignupStarted.current = false;
-      setError("Could not start Google signup. Please try again.");
+      setError("Could not start Google signup.");
       setShowFallback(true);
     }
   };
 
   useEffect(() => {
+    if (isSignedIn) {
+      router.replace(redirectUrlComplete);
+      return;
+    }
     if (fetchStatus !== "idle" || !signUp) return;
     void startGoogleSignup();
 
@@ -50,8 +62,8 @@ export default function GoogleSignupPage() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchStatus, signUp]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStatus, signUp, isSignedIn, redirectUrlComplete]);
 
   return (
     <div className="bg-muted flex min-h-svh items-center justify-center p-6">

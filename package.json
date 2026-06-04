@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@clerk/backend": "^3.4.14",
+    "@clerk/nextjs": "^7.4.2",
     "lucide-react": "^0.562.0"
   },
   "devDependencies": {

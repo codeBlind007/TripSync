@@ -10,12 +10,6 @@ import {
   addExpenseValidation,
 } from "../middlewares/tripValidation.js";
 
-import {
-  validateInvitationRequest,
-  getRecievedInvitation,
-  getSentInvitation,
-  acceptReceivedInvitation,
-} from "../controllers/invitationController.js";
 
 const router = express.Router();
 
@@ -94,18 +88,6 @@ router
   .route("/trips/tripRooms/:tripId/collaborators")
   .get(authMiddleware, tripController.getTripCollaborators);
 
-// Trip invitation
-
-router.route("/trips/invitations/validate").get(validateInvitationRequest);
-router
-  .route("/trips/invitations/recieved")
-  .get(authMiddleware, getRecievedInvitation);
-router
-  .route("/trips/invitations/sent/:tripId")
-  .get(authMiddleware, getSentInvitation);
-router
-  .route("/trips/:tripId/invitations/:invitationId")
-  .patch(authMiddleware, acceptReceivedInvitation);
 
 router.post(
   "/trips/join/:inviteCode",

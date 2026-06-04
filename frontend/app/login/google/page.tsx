@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useSignIn } from "@clerk/nextjs";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSignIn, useAuth } from "@clerk/nextjs";
 
 export default function GoogleLoginPage() {
   const { fetchStatus, signIn } = useSignIn();
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
   const startGoogleLoginStarted = useRef(false);
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -26,20 +28,30 @@ export default function GoogleLoginPage() {
     setShowFallback(false);
 
     try {
-      await signIn.sso({
+      const res = await signIn.sso({
         strategy: "oauth_google",
-        redirectUrl: redirectUrlComplete,
         redirectCallbackUrl: "/login/google/callback",
+        redirectUrl: redirectUrlComplete,
       });
+      if (res?.error) {
+        console.error("Google login failed:", res.error);
+        startGoogleLoginStarted.current = false;
+        setError(res.error.message || "Could not start Google login.");
+        setShowFallback(true);
+      }
     } catch (err) {
-      console.error("Google login redirect failed:", err);
+      console.error("Google login failed:", err);
       startGoogleLoginStarted.current = false;
-      setError("Could not start Google login. Please try again.");
+      setError("Could not start Google login.");
       setShowFallback(true);
     }
   };
 
   useEffect(() => {
+    if (isSignedIn) {
+      router.replace(redirectUrlComplete);
+      return;
+    }
     if (fetchStatus !== "idle" || !signIn) return;
     void startGoogleLogin();
 
@@ -50,8 +62,8 @@ export default function GoogleLoginPage() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchStatus, signIn]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStatus, signIn, isSignedIn, redirectUrlComplete]);
 
   return (
     <div className="bg-muted flex min-h-svh items-center justify-center p-6">
