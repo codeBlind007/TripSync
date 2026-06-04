@@ -247,7 +247,11 @@ export function LoginForm({
               <div className="text-center text-sm">
                 Don&apos;t have an account?{" "}
                 <a
-                  href="/signup"
+                  href={
+                    redirectUrl
+                      ? `/signup?redirect_url=${encodeURIComponent(redirectUrl)}`
+                      : "/signup"
+                  }
                   className="underline underline-offset-4"
                   aria-disabled={isLoading}
                 >

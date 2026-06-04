@@ -45,7 +45,7 @@ export function SignupForm({
         },
       );
       if (res.ok) {
-        router.push(redirectUrl || "/dashboard");
+        router.replace(redirectUrl || "/dashboard");
       } else {
         const errorData = await res.json();
         setError(errorData.message || "Signup failed. Please try again.");
@@ -207,7 +207,14 @@ export function SignupForm({
               </Button>
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="/login" className="underline underline-offset-4">
+                <a
+                  href={
+                    redirectUrl
+                      ? `/login?redirect_url=${encodeURIComponent(redirectUrl)}`
+                      : "/login"
+                  }
+                  className="underline underline-offset-4"
+                >
                   Sign in
                 </a>
               </div>

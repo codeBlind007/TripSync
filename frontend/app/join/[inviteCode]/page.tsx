@@ -40,15 +40,7 @@ export default function JoinInvitePage() {
   const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      router.replace(`/login?redirect_url=${encodeURIComponent(pathname)}`);
-    }
-  }, [isLoaded, isSignedIn, pathname, router]);
-
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn || !inviteCode) return;
+    if (!isLoaded || !inviteCode) return;
 
     let active = true;
 
@@ -57,7 +49,7 @@ export default function JoinInvitePage() {
       setError(null);
 
       try {
-        const token = await getToken();
+        const token = isSignedIn ? await getToken() : null;
         const res = await fetch(
           buildClientApiUrl(`/api/trips/invite/${inviteCode}`),
           {
@@ -71,6 +63,13 @@ export default function JoinInvitePage() {
         );
 
         const data = await res.json().catch(() => null);
+
+        if (res.status === 401) {
+          router.replace(
+            `/login?redirect_url=${encodeURIComponent(pathname)}`,
+          );
+          return;
+        }
 
         if (!res.ok) {
           throw new Error(data?.message || "Failed to load invite preview");
@@ -99,7 +98,7 @@ export default function JoinInvitePage() {
     return () => {
       active = false;
     };
-  }, [getToken, inviteCode, isLoaded, isSignedIn]);
+  }, [getToken, inviteCode, isLoaded, isSignedIn, pathname, router]);
 
   const handleJoinTrip = async () => {
     if (!inviteCode || !preview) return;
@@ -107,7 +106,7 @@ export default function JoinInvitePage() {
     setIsJoining(true);
 
     try {
-      const token = await getToken();
+      const token = isSignedIn ? await getToken() : null;
       const res = await fetch(
         buildClientApiUrl(`/api/trips/join/${inviteCode}`),
         {
@@ -127,7 +126,9 @@ export default function JoinInvitePage() {
       }
 
       toast.success(data?.message || "Joined the trip successfully");
-      router.replace(`/triproom/${data?.trip?._id ?? preview.tripId}`);
+      router.replace(
+        `/triproom/${data?.data?._id ?? preview.tripId}`,
+      );
     } catch (joinError) {
       toast.error(
         joinError instanceof Error
