@@ -75,7 +75,6 @@ const CollaboratorsClient = ({
         buildClientApiUrl(`/api/trips/${tripId}/invite`),
         {
           method: "GET",
-          credentials: "include",
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             "Content-Type": "application/json",

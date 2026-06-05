@@ -2,13 +2,9 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
 import { buildClientApiUrl } from "@/lib/client-api";
 
@@ -19,43 +15,8 @@ export function SignupForm({
   const searchParams = useSearchParams();
   const token = searchParams.get("invite");
   const redirectUrl = searchParams.get("redirect_url");
-  const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>("");
   const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const res = await fetch(
-        buildClientApiUrl(
-          `/api/auth/create-account${token ? `?invite=${token}` : ""}`,
-        ),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ name, email, password }),
-        },
-      );
-      if (res.ok) {
-        router.replace(redirectUrl || "/dashboard");
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Signup failed. Please try again.");
-      }
-    } catch {
-      setError("Network error. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleGoogleSignUp = () => {
     if (redirectUrl) {
@@ -70,36 +31,28 @@ export function SignupForm({
 
   useEffect(() => {
     const fetchInvitationData = async () => {
-      if (token) {
-        setIsLoading(true);
-        try {
-          const res = await fetch(
-            buildClientApiUrl(`/api/trips/invitations/validate?token=${token}`),
-            {
-              credentials: "include",
-            },
-          );
+      if (!token) return;
 
-          if (res.ok) {
-            const data = await res.json();
-            setEmail(data.email || "");
-          }
-        } catch (error) {
-          console.error("Error fetching invitation data:", error);
-        } finally {
-          setIsLoading(false);
-        }
+      setIsLoading(true);
+      try {
+        await fetch(
+          buildClientApiUrl(`/api/trips/invitations/validate?token=${token}`),
+        );
+      } catch (error) {
+        console.error("Error fetching invitation data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchInvitationData();
+    void fetchInvitationData();
   }, [token]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8" onSubmit={handleSubmit}>
+          <div className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
@@ -113,79 +66,6 @@ export function SignupForm({
                 )}
               </div>
 
-              {error && (
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="grid gap-3">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  placeholder="Jane Doe"
-                  required
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="jane@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => {
-                    // Only allow changes if there's no token
-                    if (!token) {
-                      setEmail(e.target.value);
-                    }
-                  }}
-                  readOnly={!!token}
-                  disabled={isLoading}
-                  className={token ? "bg-muted cursor-not-allowed" : ""}
-                />
-                {token && (
-                  <p className="text-xs text-muted-foreground">
-                    Email is pre-filled from your invitation and cannot be
-                    changed
-                  </p>
-                )}
-                {isLoading && token && (
-                  <p className="text-xs text-muted-foreground">
-                    Loading invitation details...
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full cursor-pointer"
-                disabled={isLoading}
-              >
-                {isLoading ? "Loading..." : "Create Account"}
-              </Button>
-
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -203,8 +83,9 @@ export function SignupForm({
                     fill="currentColor"
                   />
                 </svg>
-                Continue with Google
+                {isLoading ? "Loading..." : "Continue with Google"}
               </Button>
+
               <div className="text-center text-sm">
                 Already have an account?{" "}
                 <a
@@ -219,7 +100,7 @@ export function SignupForm({
                 </a>
               </div>
             </div>
-          </form>
+          </div>
 
           <div className="bg-muted relative hidden md:block">
             <Image

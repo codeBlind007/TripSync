@@ -56,7 +56,6 @@ export function TaskItem({ task, tripId, isCompleted = false }: TaskItemProps) {
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          credentials: "include",
         },
       );
 

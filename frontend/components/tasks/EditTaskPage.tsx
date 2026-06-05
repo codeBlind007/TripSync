@@ -46,7 +46,6 @@ export function EditTaskPage({
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          credentials: "include",
           body: JSON.stringify({
             text: taskText.trim(),
             assignedTo: selectedAssignee,

@@ -67,7 +67,6 @@ export function DayCard({
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        credentials: "include",
       },
     );
 

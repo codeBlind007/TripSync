@@ -54,7 +54,6 @@ export default function JoinInvitePage() {
           buildClientApiUrl(`/api/trips/invite/${inviteCode}`),
           {
             method: "GET",
-            credentials: "include",
             headers: {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
               "Content-Type": "application/json",
@@ -111,7 +110,6 @@ export default function JoinInvitePage() {
         buildClientApiUrl(`/api/trips/join/${inviteCode}`),
         {
           method: "POST",
-          credentials: "include",
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             "Content-Type": "application/json",
@@ -142,7 +140,7 @@ export default function JoinInvitePage() {
 
   if (!isLoaded || isLoading) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6">
+      <div className="flex min-h-svh items-center justify-center bg-linear-to-br from-slate-50 via-white to-slate-100 p-6">
         <Card className="w-full max-w-xl shadow-lg">
           <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
             <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
@@ -162,7 +160,7 @@ export default function JoinInvitePage() {
 
   if (error) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6">
+      <div className="flex min-h-svh items-center justify-center bg-linear-to-br from-slate-50 via-white to-slate-100 p-6">
         <Card className="w-full max-w-xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl">Invite unavailable</CardTitle>
@@ -198,7 +196,7 @@ export default function JoinInvitePage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] p-4 sm:p-6">
+    <div className="flex min-h-svh items-center justify-center bg-[radial-gradient(circle_at_top,rgba(15,23,42,0.08),transparent_32%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] p-4 sm:p-6">
       <Card className="w-full max-w-2xl overflow-hidden border-slate-200 shadow-xl">
         <CardHeader className="space-y-3 border-b bg-slate-50/80 px-6 py-5 sm:px-8">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-600">

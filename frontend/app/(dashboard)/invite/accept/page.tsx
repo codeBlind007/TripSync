@@ -1,12 +1,7 @@
-import React from 'react'
-import InvitationPage from '@/components/invitation/InvitationPage';
-import { cookies } from 'next/headers';
+import InvitationPage from "@/components/invitation/InvitationPage";
 
-const page = async() => {
-  const cookieStore = await cookies();
-  return (
-    <InvitationPage cookie={cookieStore.toString()}></InvitationPage>
-  )
-}
+const page = () => {
+  return <InvitationPage />;
+};
 
-export default page
+export default page;

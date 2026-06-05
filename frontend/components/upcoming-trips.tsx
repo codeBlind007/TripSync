@@ -238,7 +238,7 @@ const TripCard = ({ trip }: { trip: Trip }) => {
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-2.5 rounded-full transition-all duration-500 shadow-sm"
+              className="bg-linear-to-r from-blue-500 via-indigo-500 to-purple-600 h-2.5 rounded-full transition-all duration-500 shadow-sm"
               style={{ width: `${completionPercentage}%` }}
             ></div>
           </div>
@@ -385,7 +385,6 @@ const UpcomingTrips: React.FC = () => {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          credentials: "include",
         });
 
         if (!res.ok) throw new Error("Failed to fetch upcoming trips");
@@ -409,7 +408,7 @@ const UpcomingTrips: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-[300px]" />
+        <Skeleton className="h-10 w-75" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="p-6">
@@ -468,7 +467,7 @@ const UpcomingTrips: React.FC = () => {
           </h1>
         </div>
         <Button
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
           onClick={() => router.push("/dashboard/create-trip")}
         >
           <Plus className="h-4 w-4" />
@@ -484,7 +483,7 @@ const UpcomingTrips: React.FC = () => {
       </p>
 
       {trips.length === 0 ? (
-        <Card className="border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-blue-50/50">
+        <Card className="border-2 border-dashed border-gray-200 bg-linear-to-br from-gray-50 to-blue-50/50">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <Calendar className="h-8 w-8 text-blue-600" />
@@ -498,7 +497,7 @@ const UpcomingTrips: React.FC = () => {
             </p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
+              className="bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer"
               onClick={() => router.replace("/dashboard/create-trip")}
             >
               <Plus className="h-4 w-4 mr-2" />

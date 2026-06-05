@@ -1,22 +1,19 @@
 "use server";
-import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 
-type RequestCookies = Awaited<ReturnType<typeof cookies>>;
-
 function buildAuthHeaders(
-  cookieStore: RequestCookies | null,
-  authToken?: string,
+  authToken: string | null | undefined,
   extraHeaders: Record<string, string> = {},
 ) {
-  const headers: Record<string, string> = { ...extraHeaders };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...extraHeaders,
+  };
 
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
-  } else if (cookieStore) {
-    headers.Cookie = cookieStore.toString();
   }
 
   return headers;
@@ -37,14 +34,10 @@ async function getRequestAuthToken() {
 
 export async function getUserInfo(authToken?: string) {
   try {
-    const cookieStore = await cookies();
     const requestAuthToken = authToken ?? (await getRequestAuthToken());
     const res = await fetch(buildApiUrl("/api/user/me"), {
       method: "GET",
-      credentials: "include",
-      headers: buildAuthHeaders(cookieStore, requestAuthToken ?? undefined, {
-        "Content-Type": "application/json",
-      }),
+      headers: buildAuthHeaders(requestAuthToken),
       cache: "no-store",
     });
 
@@ -66,11 +59,7 @@ export async function syncOAuthUser() {
     const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/auth/oauth-callback"), {
       method: "POST",
-      credentials: "include",
-      headers: {
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        "Content-Type": "application/json",
-      },
+      headers: buildAuthHeaders(authToken),
       cache: "no-store",
     });
 
@@ -91,11 +80,7 @@ export async function getAllUserTrips() {
     const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/all-trips"), {
       method: "GET",
-      credentials: "include",
-      headers: {
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        "Content-Type": "application/json",
-      },
+      headers: buildAuthHeaders(authToken),
       cache: "no-store",
     });
 
@@ -113,11 +98,7 @@ export async function getUserUpcomingTrips() {
     const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/upcoming-trips-dashboard"), {
       method: "GET",
-      credentials: "include",
-      headers: {
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        "Content-Type": "application/json",
-      },
+      headers: buildAuthHeaders(authToken),
       cache: "no-store",
     });
 
@@ -134,9 +115,7 @@ export async function getCompletedTrips() {
   try {
     const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/completed-trips"), {
-      headers: {
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      },
+      headers: buildAuthHeaders(authToken),
       next: { tags: ["completed-trips"] },
     });
 
@@ -154,11 +133,7 @@ export async function getOngoingTrips() {
     const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/user/ongoing-trips"), {
       method: "GET",
-      credentials: "include",
-      headers: {
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        "Content-Type": "application/json",
-      },
+      headers: buildAuthHeaders(authToken),
       cache: "no-store",
     });
 
@@ -178,11 +153,7 @@ export async function getUserCompletedTrips() {
       buildApiUrl("/api/user/completed-trips-dashboard"),
       {
         method: "GET",
-        credentials: "include",
-        headers: {
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-          "Content-Type": "application/json",
-        },
+        headers: buildAuthHeaders(authToken),
         cache: "no-store",
       },
     );
@@ -198,13 +169,11 @@ export async function getUserCompletedTrips() {
 
 export async function getRoomCollab(tripId: string) {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(
       buildApiUrl(`/api/trips/tripRooms/${tripId}/collaborators`),
       {
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
+        headers: buildAuthHeaders(authToken),
         next: { tags: ["messages"] },
       },
     );
@@ -232,12 +201,10 @@ export async function getRoomCollab(tripId: string) {
 
 export async function getTripDetails(tripId: string) {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl(`/api/trips/${tripId}`), {
       method: "GET",
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: buildAuthHeaders(authToken),
       cache: "no-store",
     });
 
@@ -255,11 +222,9 @@ export async function getTripDetails(tripId: string) {
 
 export async function getReceivedInvitations() {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl("/api/trips/invitations/recieved"), {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: buildAuthHeaders(authToken),
       method: "GET",
     });
 
@@ -286,13 +251,11 @@ export async function getReceivedInvitations() {
 
 export async function getSentInvitations(tripId: string) {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(
       buildApiUrl(`/api/trips/invitations/sent/${tripId}`),
       {
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
+        headers: buildAuthHeaders(authToken),
       },
     );
     if (!res.ok) return null;
@@ -311,13 +274,10 @@ export async function inviteCollaborator(
   authToken?: string,
 ) {
   try {
-    const cookieStore = authToken ? null : await cookies();
+    const token = authToken ?? (await getRequestAuthToken());
     const res = await fetch(buildApiUrl(`/api/trips/${tripId}/invite`), {
       method: "POST",
-      credentials: "include",
-      headers: buildAuthHeaders(cookieStore, authToken, {
-        "Content-Type": "application/json",
-      }),
+      headers: buildAuthHeaders(token),
       body: JSON.stringify({
         email,
       }),
@@ -346,14 +306,12 @@ export async function acceptInvitation(
   authToken?: string,
 ) {
   try {
-    const cookieStore = authToken ? null : await cookies();
+    const token = authToken ?? (await getRequestAuthToken());
     const res = await fetch(
       buildApiUrl(`/api/trips/${tripId}/invitations/${invitationId}`),
       {
         method: "PATCH",
-        headers: buildAuthHeaders(cookieStore, authToken, {
-          "Content-type": "application/json",
-        }),
+        headers: buildAuthHeaders(token),
       },
     );
 
@@ -370,11 +328,9 @@ export async function acceptInvitation(
 }
 
 export async function getTripTasks(tripId: string) {
-  const cookieStore = await cookies();
+  const authToken = await getRequestAuthToken();
   const res = await fetch(buildApiUrl(`/api/trips/${tripId}/tasks`), {
-    headers: {
-      Cookie: cookieStore.toString(),
-    },
+    headers: buildAuthHeaders(authToken),
     next: { tags: ["tasks"] },
   });
 
@@ -391,13 +347,13 @@ export async function removeCollaborator(
   collaboratorId: string,
   authToken?: string,
 ) {
-  const cookieStore = authToken ? null : await cookies();
+  const token = authToken ?? (await getRequestAuthToken());
   try {
     const res = await fetch(
       buildApiUrl(`/api/trips/${tripId}/collaborators/${collaboratorId}`),
       {
         method: "DELETE",
-        headers: buildAuthHeaders(cookieStore, authToken),
+        headers: buildAuthHeaders(token),
       },
     );
 
@@ -415,12 +371,10 @@ export async function removeCollaborator(
 
 export async function getTripCollaborators(tripId: string) {
   try {
-    const cookieStore = await cookies();
+    const authToken = await getRequestAuthToken();
     const res = await fetch(buildApiUrl(`/api/trips/${tripId}/collaborators`), {
       method: "GET",
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: buildAuthHeaders(authToken),
       next: { tags: ["trip-collaborators"] },
     });
 
@@ -437,12 +391,10 @@ export async function getTripCollaborators(tripId: string) {
 }
 
 export async function getExpenses(tripId: string) {
-  const cookieStore = await cookies();
+  const authToken = await getRequestAuthToken();
   const res = await fetch(buildApiUrl(`/api/trips/${tripId}/expenses`), {
     cache: "no-store",
-    headers: {
-      Cookie: cookieStore.toString(),
-    },
+    headers: buildAuthHeaders(authToken),
   });
 
   if (!res.ok) return null;
@@ -455,15 +407,13 @@ export async function getActivityData(
   activityId: string,
   itineraryId: string,
 ) {
-  const cookieStore = await cookies();
+  const authToken = await getRequestAuthToken();
   const res = await fetch(
     buildApiUrl(
       `/api/trips/${tripId}/itinerary/${itineraryId}/activities/${activityId}`,
     ),
     {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: buildAuthHeaders(authToken),
       next: { tags: ["itinerary"] },
     },
   );
@@ -474,12 +424,10 @@ export async function getActivityData(
 }
 
 export async function fetchItinerary(tripId: string) {
-  const cookieStore = await cookies();
+  const authToken = await getRequestAuthToken();
   const res = await fetch(buildApiUrl(`/api/trips/${tripId}/itinerary`), {
     cache: "no-store",
-    headers: {
-      Cookie: cookieStore.toString(),
-    },
+    headers: buildAuthHeaders(authToken),
     next: { tags: ["itinerary"] },
   });
 
@@ -499,13 +447,11 @@ export async function fetchItinerary(tripId: string) {
 }
 
 export async function getMessHistory(tripId: string) {
-  const cookieStore = await cookies();
+  const authToken = await getRequestAuthToken();
   const res = await fetch(
     buildApiUrl(`/api/trips/tripRooms/${tripId}/messages`),
     {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      headers: buildAuthHeaders(authToken),
       next: { tags: ["messages"] },
     },
   );

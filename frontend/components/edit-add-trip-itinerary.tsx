@@ -351,7 +351,6 @@ export default function EditActivityClient({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(formData),
-        credentials: "include",
       });
 
       if (!response.ok) {
@@ -393,7 +392,6 @@ export default function EditActivityClient({
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          credentials: "include",
         },
       );
 

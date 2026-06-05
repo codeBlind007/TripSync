@@ -491,19 +491,8 @@ export const getUserInfo = async (req, res, next) => {
       });
     }
 
-    // Try to find by clerkUserId first, then fallback to _id (used by our backend token)
     let user = await User.findOne({ clerkUserId: authUserId });
 
-    if (!user) {
-      // If the authUserId is actually a MongoDB _id, try that
-      try {
-        user = await User.findById(authUserId);
-      } catch (err) {
-        user = null;
-      }
-    }
-
-    // If still not found, assume this is a Clerk ID and attempt to reconcile via Clerk
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(authUserId);
       const primaryEmail = clerkUser.emailAddresses.find(

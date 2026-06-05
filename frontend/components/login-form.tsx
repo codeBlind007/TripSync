@@ -3,16 +3,8 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  ExclamationTriangleIcon,
-  EyeClosedIcon,
-  EyeOpenIcon,
-} from "@radix-ui/react-icons";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { buildClientApiUrl } from "@/lib/client-api";
@@ -21,53 +13,11 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [invitedTripId, setInvitedTripId] = useState<string>("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("invite");
   const redirectUrl = searchParams.get("redirect_url");
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const res = await fetch(
-        buildClientApiUrl(`/api/auth/login${token ? `?invite=${token}` : ""}`),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        },
-      );
-
-      const responseData = await res.json().catch(() => null);
-      const isSuccessfulLogin = res.ok && responseData?.success !== false;
-
-      if (isSuccessfulLogin && redirectUrl) {
-        router.replace(redirectUrl);
-      } else if (isSuccessfulLogin && token) {
-        router.push(`/collaborators/${invitedTripId}`);
-      } else if (isSuccessfulLogin) {
-        router.replace("/dashboard");
-      } else {
-        setError(responseData?.message || "Login failed. Please try again.");
-      }
-    } catch {
-      setError("Network error. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleGoogleSignIn = () => {
     if (redirectUrl) {
@@ -82,146 +32,39 @@ export function LoginForm({
 
   useEffect(() => {
     const fetchInvitationData = async () => {
-      if (token) {
-        setIsLoading(true);
-        try {
-          const res = await fetch(
-            buildClientApiUrl(`/api/trips/invitations/validate?token=${token}`),
-            {
-              credentials: "include",
-            },
-          );
+      if (!token) return;
 
-          if (res.ok) {
-            const data = await res.json();
-            setEmail(data.email || "");
-            setInvitedTripId(data.tripId);
-          }
-        } catch (error) {
-          console.error("Error fetching invitation data:", error);
-        } finally {
-          setIsLoading(false);
-        }
+      setIsLoading(true);
+      try {
+        await fetch(
+          buildClientApiUrl(`/api/trips/invitations/validate?token=${token}`),
+        );
+      } catch (error) {
+        console.error("Error fetching invitation data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchInvitationData();
+    void fetchInvitationData();
   }, [token]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8" onSubmit={handleSubmit}>
+          <div className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
                 <p className="text-muted-foreground text-balance">
-                  Login to your TripSync account
+                  Sign in to your TripSync account with Google
                 </p>
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => {
-                    if (!token) setEmail(e.target.value);
-                  }}
-                  disabled={isLoading}
-                  autoComplete="email"
-                  readOnly={!!token}
-                  aria-describedby="email-error"
-                />
-              </div>
-
-              <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    autoComplete="current-password"
-                    aria-describedby="password-error"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? (
-                      <EyeClosedIcon className="h-4 w-4" />
-                    ) : (
-                      <EyeOpenIcon className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full cursor-pointer"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <svg
-                      className="mr-2 h-4 w-4 animate-spin"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Logging in...
-                  </>
-                ) : (
-                  "Login"
+                {token && (
+                  <p className="text-sm text-green-600 mt-2">
+                    You have been invited to join a trip!
+                  </p>
                 )}
-              </Button>
-
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
               </div>
 
               <Button
@@ -241,7 +84,7 @@ export function LoginForm({
                     fill="currentColor"
                   />
                 </svg>
-                Continue with Google
+                {isLoading ? "Loading..." : "Continue with Google"}
               </Button>
 
               <div className="text-center text-sm">
@@ -259,7 +102,7 @@ export function LoginForm({
                 </a>
               </div>
             </div>
-          </form>
+          </div>
           <div className="bg-muted relative hidden md:block">
             <Image
               src="/login-bg.jpg"

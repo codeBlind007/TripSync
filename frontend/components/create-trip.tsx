@@ -134,7 +134,6 @@ export default function CreateTripPage() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        credentials: "include",
         body: JSON.stringify({
           title: formData.title.trim(),
           description: formData.description.trim(),

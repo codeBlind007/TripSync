@@ -214,7 +214,7 @@ function NavigationProgressProvider({ children }: { children: ReactNode }) {
         )}
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <div className="relative h-[2px] w-full overflow-hidden bg-primary/15 shadow-[0_1px_6px] shadow-primary/25 sm:h-[3px]">
+        <div className="relative h-0.5 w-full overflow-hidden bg-primary/15 shadow-[0_1px_6px] shadow-primary/25 sm:h-0.75">
           <div
             className="bg-primary h-full transition-[width] duration-300 ease-out"
             style={{ width: `${progress}%` }}

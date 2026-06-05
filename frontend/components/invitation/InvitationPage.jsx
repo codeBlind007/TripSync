@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const InvitationPage = (cookie) => {
+const InvitationPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -16,12 +16,7 @@ const InvitationPage = (cookie) => {
 
     const validateInvitation = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/trips/invitations/validate?token=${token}`, {
-          credentials: "include",
-          headers: {
-            Cookie: cookie
-          },
-        });
+        const res = await fetch(`${API_BASE_URL}/api/trips/invitations/validate?token=${token}`);
 
         const data = await res.json();
         console.log("Invite validation response:", data);

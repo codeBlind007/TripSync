@@ -43,7 +43,6 @@ export default function AddTripItinerary({
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          credentials: "include",
           body: JSON.stringify({ date }),
         },
       );
