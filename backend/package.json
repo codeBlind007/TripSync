@@ -8,12 +8,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "worker": "node workers/messageWorkers.js"
   },
   "dependencies": {
     "@clerk/express": "^2.1.15",
     "@emailjs/nodejs": "^5.0.2",
-    "@upstash/redis": "^1.38.0",
     "bullmq": "^5.76.6",
     "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",

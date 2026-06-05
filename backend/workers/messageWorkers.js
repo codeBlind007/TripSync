@@ -12,23 +12,13 @@ dotenv.config({
 import { Worker } from "bullmq";
 import Message from "../models/TripRooms.js";
 import { connectDB } from "../utils/db.js";
-import { connection } from "../utils/bullmqRedis.js";
-
-const parseWorkerMessage = (value) => {
-  if (value && typeof value === "object") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
-};
+import { redis } from "../utils/redis.js";
+import {
+  ensureMessageFlushJob,
+  parseStoredMessage,
+  restoreProcessingMessages,
+  tripMessageRedisKeys,
+} from "../utils/chatRedis.js";
 
 await connectDB();
 
@@ -38,46 +28,31 @@ new Worker(
   "messageQueue",
   async (job) => {
     const { tripId } = job.data;
-
-    const redisKey = `trip:${tripId}:messages`;
-    const processingKey = `${redisKey}:processing`;
+    const { pending: redisKey, processing: processingKey } =
+      tripMessageRedisKeys(tripId);
 
     console.log(`Processing trip ${tripId}`);
 
     try {
-      const exists = await connection.exists(redisKey);
+      const exists = await redis.exists(redisKey);
 
       if (!exists) {
-        console.log(
-          `No pending messages for trip ${tripId}`
-        );
+        console.log(`No pending messages for trip ${tripId}`);
         return;
       }
 
-      /**
-       * Move current batch to processing key.
-       *
-       * Any new messages arriving after this point
-       * will go into the original redisKey and won't
-       * be lost.
-       */
-      await connection.rename(redisKey, processingKey);
+      await redis.rename(redisKey, processingKey);
 
-      const messages = await connection.lrange(
-        processingKey,
-        0,
-        -1
-      );
+      const messages = await redis.lrange(processingKey, 0, -1);
 
       if (!messages.length) {
-        await connection.del(processingKey);
+        await redis.del(processingKey);
         return;
       }
 
       const docs = messages
         .map((msg) => {
-          const parsed = parseWorkerMessage(msg);
-
+          const parsed = parseStoredMessage(msg);
           if (!parsed) return null;
 
           return {
@@ -87,66 +62,40 @@ new Worker(
                 ? parsed.sender._id
                 : parsed.sender,
             text: parsed.text,
-            timestamp: new Date(
-              parsed.timestamp || Date.now()
-            ),
+            timestamp: new Date(parsed.timestamp || Date.now()),
           };
         })
         .filter(Boolean);
 
       if (!docs.length) {
-        await connection.del(processingKey);
+        await redis.del(processingKey);
         return;
       }
 
       await Message.insertMany(docs);
 
-      console.log(
-        `Inserted ${docs.length} messages for trip ${tripId}`
-      );
+      console.log(`Inserted ${docs.length} messages for trip ${tripId}`);
 
-      await connection.del(processingKey);
+      await redis.del(processingKey);
 
-      /**
-       * IMPORTANT
-       *
-       * Messages may have arrived while we were
-       * inserting to MongoDB.
-       *
-       * If so, schedule another flush.
-       */
-      const remaining = await connection.llen(redisKey);
+      const remaining = await redis.llen(redisKey);
 
       if (remaining > 0) {
-        await job.queue.add(
-          "flush-tripRoom-messages",
-          { tripId },
-          {
-            jobId: `trip-${tripId}`,
-            delay: 2 * 60 * 1000,
-            removeOnComplete: true,
-          }
-        );
-
+        await ensureMessageFlushJob(tripId);
         console.log(
-          `Rescheduled flush for ${remaining} new messages`
+          `Rescheduled flush for ${remaining} new messages on trip ${tripId}`,
         );
       }
     } catch (err) {
-      console.error(
-        `Worker failed for trip ${tripId}:`,
-        err
-      );
-
-      try {
-        await connection.del(processingKey);
-      } catch (_) {}
+      console.error(`Worker failed for trip ${tripId}:`, err);
+      await restoreProcessingMessages(redis, tripId);
+      throw err;
     }
   },
   {
-    connection,
+    connection: redis,
     concurrency: 5,
-  }
+  },
 );
 
 console.log("Worker ready");

@@ -1,23 +1,9 @@
-import Redis from "ioredis";
-import { messageQueue } from "../queues/messageQueue.js";
 import { redis } from "../utils/redis.js";
-
-const normalizeRedisMessage = (value) => {
-  // Upstash may return already-deserialized objects for list values.
-  if (value && typeof value === "object") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return { raw: value };
-    }
-  }
-
-  return { raw: value };
-};
+import {
+  ensureMessageFlushJob,
+  touchMessageKeyTtl,
+  tripMessageRedisKeys,
+} from "../utils/chatRedis.js";
 
 export const socketController = (io) => {
   io.on("connection", (socket) => {
@@ -32,14 +18,17 @@ export const socketController = (io) => {
       try {
         const { tripId, sender, text } = data;
 
-        // Real-time delivery
+        if (!tripId || !sender?._id || !text) {
+          return;
+        }
+
         io.to(tripId).emit("receive-msg", {
           text,
           tripId,
           sender,
         });
 
-        const redisKey = `trip:${tripId}:messages`;
+        const { pending: redisKey } = tripMessageRedisKeys(tripId);
 
         const payload = JSON.stringify({
           tripId,
@@ -52,37 +41,11 @@ export const socketController = (io) => {
           timestamp: Date.now(),
         });
 
-        // Store in Redis
         await redis.rpush(redisKey, payload);
+        await touchMessageKeyTtl(redis, redisKey);
+        await ensureMessageFlushJob(tripId);
 
-        // Optional TTL
-        const ttl = await redis.ttl(redisKey);
-
-        if (ttl === -1) {
-          await redis.expire(redisKey, 3600);
-        }
-
-        // Create only ONE delayed flush job per trip
-        const jobId = `trip-${tripId}`;
-
-        const existingJob = await messageQueue.getJob(jobId);
-
-        if (!existingJob) {
-          await messageQueue.add(
-            "flush-tripRoom-messages",
-            { tripId },
-            {
-              jobId,
-              delay: 2 * 60 * 1000, // 2 minutes
-              removeOnComplete: true,
-              removeOnFail: false,
-            }
-          );
-
-          console.log(
-            `Scheduled flush job for trip ${tripId}`
-          );
-        }
+        console.log(`Cached message and scheduled flush for trip ${tripId}`);
       } catch (err) {
         console.error("Socket message error:", err);
       }

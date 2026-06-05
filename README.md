@@ -115,10 +115,10 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 # Database
 MONGO_URI=your_mongodb_connection_string
 
-# Redis & Upstash (Queue / Caching)
-REDIS_URL=your_redis_url
-UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
-UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
+# Upstash Redis (TCP URL from Upstash dashboard — used for cache, BullMQ, and sockets)
+UPSTASH_REDIS_URL=your_upstash_redis_tcp_url
+# Optional alias:
+# REDIS_URL=your_upstash_redis_tcp_url
 
 # Email Services
 EMAIL_USER=your_email_address
