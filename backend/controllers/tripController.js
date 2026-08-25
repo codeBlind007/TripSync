@@ -552,6 +552,7 @@ const addItineraryActivity = async (req, res, next) => {
       title,
       location: location || "",
       notes: notes || "",
+      version: 1,
     };
 
     // Push new activity into itinerary
@@ -576,7 +577,7 @@ const editItineraryActivity = async (req, res, next) => {
     const { tripId, itineraryId, activityId } = req.params;
     const clerkUserId = req.auth?.userId;
     const userId = await getUserMongoId(clerkUserId, req.user?.email);
-    const { time, title, location, notes } = req.body;
+    const { time, title, location, notes, version } = req.body;
 
     if (!tripId || !itineraryId || !activityId) {
       throw new AppError(
@@ -585,6 +586,16 @@ const editItineraryActivity = async (req, res, next) => {
       );
     }
 
+    if (version === undefined || version === null || isNaN(Number(version))) {
+      throw new AppError(
+        "A valid version number is required for optimistic locking",
+        400,
+      );
+    }
+
+    const clientVersion = Number(version);
+
+    // First fetch trip to verify access and existence of itinerary/activity
     const trip = await TripModel.findOne({
       _id: tripId,
       $or: [{ owner: userId }, { collaborators: userId }],
@@ -594,13 +605,11 @@ const editItineraryActivity = async (req, res, next) => {
       throw new AppError("Trip not found or access denied", 404);
     }
 
-    // Find the specific itinerary day
     const itinerary = trip.itinerary.id(itineraryId);
     if (!itinerary) {
       throw new AppError("Itinerary day not found", 404);
     }
 
-    // Find the specific activity by its _id
     const activity = itinerary.activities.find(
       (a) => String(a.activityId).trim() === String(activityId).trim(),
     );
@@ -608,17 +617,76 @@ const editItineraryActivity = async (req, res, next) => {
       throw new AppError("Activity not found", 404);
     }
 
-    if (time !== undefined) activity.time = time;
-    if (title !== undefined) activity.title = title;
-    if (location !== undefined) activity.location = location;
-    if (notes !== undefined) activity.notes = notes;
+    const currentVersion = activity.version ?? 1;
 
-    await trip.save();
+    // Check version match before update
+    if (clientVersion !== currentVersion) {
+      throw new AppError(
+        "Conflict: Activity has been updated by another user. Please refresh and try again.",
+        409,
+      );
+    }
+
+    // Atomic update in MongoDB with version matching to prevent race conditions
+    const updatedTrip = await TripModel.findOneAndUpdate(
+      {
+        _id: tripId,
+        $or: [{ owner: userId }, { collaborators: userId }],
+        "itinerary._id": itineraryId,
+        "itinerary.activities": {
+          $elemMatch: {
+            activityId: String(activityId).trim(),
+            $or: [
+              { version: clientVersion },
+              ...(clientVersion === 1 ? [{ version: { $exists: false } }] : []),
+            ],
+          },
+        },
+      },
+      {
+        $set: {
+          ...(time !== undefined && {
+            "itinerary.$[itin].activities.$[act].time": time,
+          }),
+          ...(title !== undefined && {
+            "itinerary.$[itin].activities.$[act].title": title,
+          }),
+          ...(location !== undefined && {
+            "itinerary.$[itin].activities.$[act].location": location,
+          }),
+          ...(notes !== undefined && {
+            "itinerary.$[itin].activities.$[act].notes": notes,
+          }),
+        },
+        $inc: {
+          "itinerary.$[itin].activities.$[act].version": 1,
+        },
+      },
+      {
+        arrayFilters: [
+          { "itin._id": itineraryId },
+          { "act.activityId": String(activityId).trim() },
+        ],
+        new: true,
+      },
+    );
+
+    if (!updatedTrip) {
+      throw new AppError(
+        "Conflict: Activity was modified by another user concurrently. Please refresh and try again.",
+        409,
+      );
+    }
+
+    const updatedItinerary = updatedTrip.itinerary.id(itineraryId);
+    const updatedActivity = updatedItinerary?.activities.find(
+      (a) => String(a.activityId).trim() === String(activityId).trim(),
+    );
 
     return res.status(200).json({
       success: true,
       message: "Activity updated successfully",
-      updatedActivity: activity,
+      updatedActivity,
     });
   } catch (error) {
     console.error("Edit Activity Error:", error);

@@ -78,6 +78,10 @@ const tripSchema = new Schema({
           title: String,
           location: String,
           notes: String,
+          version: {
+            type: Number,
+            default: 1,
+          },
         },
       ],
     },
